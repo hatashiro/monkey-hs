@@ -1,6 +1,6 @@
 name:                monkey-hs
 version:             0.1.0.0
-synopsis:            An interpreter for the Monkey Programming Language written in Haskell
+synopsis:            An interpreter for the Monkey programming language written in Haskell
 homepage:            https://github.com/noraesae/monkey-hs
 license:             BSD3
 license-file:        LICENSE
