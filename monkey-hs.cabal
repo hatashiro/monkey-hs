@@ -12,7 +12,8 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Token
+  exposed-modules:     Lexer
+                       Lexer.Token
   build-depends:       base
                      , protolude
   hs-source-dirs:      lib
