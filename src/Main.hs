@@ -1,6 +1,7 @@
 module Main where
 
 import Protolude
+import Token
 
 main :: IO ()
-main = putStrLn ("Hello, Haskell!" :: Text)
+main = putStrLn hello
