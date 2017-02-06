@@ -3,7 +3,7 @@ module Lexer.Token where
 import Protolude
 
 data Token = Illegal
-           | Eof
+           | EOF
            | Ident Text
            | IntLiteral Int
            | Assign
@@ -16,4 +16,4 @@ data Token = Illegal
            | RBrace
            | Function
            | Let
-           deriving (Show)
+           deriving (Show, Eq)
