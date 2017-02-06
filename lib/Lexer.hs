@@ -7,6 +7,9 @@ import           Lexer.Token
 
 data LexerState = LexerState { left :: Text, done :: Text }
 
+initState :: Text -> LexerState
+initState = flip LexerState ""
+
 newtype LexerT m a = LexerT { unLexerT :: StateT LexerState m a }
 
 instance Functor m => Functor (LexerT m) where
@@ -46,12 +49,11 @@ consume = LexerT $ do
   else do
     put $ LexerState (T.tail left) (T.snoc done $ T.head left)
 
-runLexer :: Text -> Lexer a -> a
-runLexer text lexer = fst . runIdentity $
-  runStateT (unLexerT lexer) $ LexerState text ""
+runLexer :: Lexer a -> Text -> a
+runLexer = ((fst . runIdentity) .) . (. initState) . runStateT . unLexerT
 
 lex :: Text -> [Token]
-lex text = runLexer text go
+lex = runLexer go
   where
   go :: Lexer [Token]
   go = do
