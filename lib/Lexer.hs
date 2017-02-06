@@ -23,15 +23,28 @@ instance Monad m => Monad (LexerT m) where
 type Lexer = LexerT Identity
 
 next :: Lexer (Maybe Char)
-next = LexerT $ do
-  LexerState left done <- get
+next = do
+  c <- preview
+  consume
+  return c
+
+preview :: Lexer (Maybe Char)
+preview = LexerT $ do
+  LexerState left _ <- get
   if T.length left == 0
   then
     return Nothing
+  else
+    return . Just $ T.head left
+
+consume :: Lexer ()
+consume = LexerT $ do
+  LexerState left done <- get
+  if T.length left == 0
+  then
+    return ()
   else do
-    let c = T.head left
-    put $ LexerState (T.tail left) (T.snoc done c)
-    return $ Just c
+    put $ LexerState (T.tail left) (T.snoc done $ T.head left)
 
 runLexer :: Text -> Lexer a -> a
 runLexer text lexer = fst . runIdentity $
@@ -42,15 +55,15 @@ lex text = runLexer text go
   where
   go :: Lexer [Token]
   go = do
-    maybeC <- next
-    case maybeC of
-      Just '=' -> (Assign:) <$> go
-      Just ';' -> (SemiColon:) <$> go
-      Just '(' -> (LParen:) <$> go
-      Just ')' -> (RParen:) <$> go
-      Just ',' -> (Comma:) <$> go
-      Just '+' -> (Plus:) <$> go
-      Just '{' -> (LBrace:) <$> go
-      Just '}' -> (RBrace:) <$> go
+    c <- preview
+    case c of
+      Just '=' -> consume >> (Assign:) <$> go
+      Just ';' -> consume >> (SemiColon:) <$> go
+      Just '(' -> consume >> (LParen:) <$> go
+      Just ')' -> consume >> (RParen:) <$> go
+      Just ',' -> consume >> (Comma:) <$> go
+      Just '+' -> consume >> (Plus:) <$> go
+      Just '{' -> consume >> (LBrace:) <$> go
+      Just '}' -> consume >> (RBrace:) <$> go
       Just _ -> undefined
       Nothing -> return [EOF]
