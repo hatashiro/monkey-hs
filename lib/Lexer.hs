@@ -20,7 +20,6 @@ instance Monad m => Applicative (LexerT m) where
   (LexerT f) <*> (LexerT a) = LexerT $ f <*> a
 
 instance Monad m => Monad (LexerT m) where
-  return = pure
   (LexerT m) >>= f = LexerT $ m >>= unLexerT . f
 
 type Lexer = LexerT Identity
