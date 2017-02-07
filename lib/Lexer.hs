@@ -6,7 +6,8 @@ import qualified Data.Text as T
 import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
-import           Utils (unsafeFromRight)
+import           Unsafe (unsafeFromJust)
+import           Utils (unsafeFromRight, isLetter, isDigit, (<||>), (<<))
 
 preview :: Lexer (Maybe Char)
 preview = LexerT $ do
@@ -25,6 +26,9 @@ consume = LexerT $ do
     return ()
   else do
     put $ LexerState (T.tail left) (T.snoc done $ T.head left)
+
+next :: Lexer Char
+next = unsafeFromJust <$> preview << consume
 
 runLexer :: Lexer a -> Text -> a
 runLexer = ((fst . runIdentity) .) . (. initState) . runStateT . unLexerT
@@ -62,10 +66,12 @@ lexText f = preview >>= \maybeC ->
       if f c
       then consume >> T.cons c <$> lexText f
       else return ""
+    Nothing -> return ""
 
 lexIdentOrReserved :: Lexer Token
-lexIdentOrReserved = lexText isLetter >>= \text -> return $
-  case text of
+lexIdentOrReserved = do
+  text <- T.cons <$> next <*> lexText (isLetter <||> isDigit)
+  return $ case text of
     "let" -> Let
     "fn" -> Function
     "if" -> If

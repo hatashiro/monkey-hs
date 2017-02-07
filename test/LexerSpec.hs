@@ -146,3 +146,9 @@ spec = hspec $
                            , SemiColon
                            , EOF
                            ]
+
+    it "id with numbers" $ do
+      lex "hello2 hel301oo120" `shouldBe` [ Ident "hello2"
+                                          , Ident "hel301oo120"
+                                          , EOF
+                                          ]
