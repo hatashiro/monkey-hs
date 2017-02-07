@@ -42,13 +42,51 @@ lexChar ',' = consume >> return Comma
 lexChar '+' = consume >> return Plus
 lexChar '{' = consume >> return LBrace
 lexChar '}' = consume >> return RBrace
-lexChar _ = undefined
+lexChar c
+  | isLetter c = lexIdentOrReserved
+  | isDigit c = lexInteger
+  | otherwise = consume $> Illegal
+
+isLetter :: Char -> Bool
+isLetter = flip elem $ '_' : ['a' .. 'z'] ++ ['A' .. 'Z']
+
+isDigit :: Char -> Bool
+isDigit = flip elem ['0' .. '9']
+
+lexText :: (Char -> Bool) -> Lexer Text
+lexText f = preview >>= \maybeC ->
+  case maybeC of
+    Just c ->
+      if f c
+      then consume >> T.cons c <$> lexText f
+      else return ""
+
+lexIdentOrReserved :: Lexer Token
+lexIdentOrReserved = lexText isLetter >>= \text -> return $
+  case text of
+    "let" -> Let
+    "fn" -> Function
+    _ -> Ident text
+
+lexInteger :: Lexer Token
+lexInteger = IntLiteral <$> lexText isDigit
+
+skipWhitespaces :: Lexer ()
+skipWhitespaces = do
+  maybeC <- preview
+  case maybeC of
+    Just ' ' -> consume >> skipWhitespaces
+    Just '\t' -> consume >> skipWhitespaces
+    Just '\n' -> consume >> skipWhitespaces
+    Just '\r' -> consume >> skipWhitespaces
+    _ -> return ()
 
 lex :: Text -> [Token]
 lex = runLexer go
   where
   go :: Lexer [Token]
   go = do
+    skipWhitespaces
     c <- preview
     case c of
       Just x -> (:) <$> lexChar x <*> go

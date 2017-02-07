@@ -5,7 +5,7 @@ import Protolude
 data Token = Illegal
            | EOF
            | Ident Text
-           | IntLiteral Int
+           | IntLiteral Text
            | Assign
            | Plus
            | Comma
