@@ -3,6 +3,7 @@ module Lexer where
 import Protolude
 
 import qualified Data.Text as T
+import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
 
@@ -34,14 +35,26 @@ runLexer :: Lexer a -> Text -> a
 runLexer = ((fst . runIdentity) .) . (. initState) . runStateT . unLexerT
 
 lexChar :: Char -> Lexer Token
-lexChar '=' = consume >> return Assign
-lexChar ';' = consume >> return SemiColon
-lexChar '(' = consume >> return LParen
-lexChar ')' = consume >> return RParen
-lexChar ',' = consume >> return Comma
-lexChar '+' = consume >> return Plus
-lexChar '{' = consume >> return LBrace
-lexChar '}' = consume >> return RBrace
+lexChar '=' = consume >> preview >>= \ maybeC ->
+  case maybeC of
+    Just '=' -> consume $> Eq
+    _ -> return Assign
+lexChar ';' = consume $> SemiColon
+lexChar '(' = consume $> LParen
+lexChar ')' = consume $> RParen
+lexChar ',' = consume $> Comma
+lexChar '+' = consume $> Plus
+lexChar '-' = consume $> Minus
+lexChar '*' = consume $> Multiply
+lexChar '/' = consume $> Divide
+lexChar '!' = consume >> preview >>= \ maybeC ->
+  case maybeC of
+    Just '=' -> consume $> NotEq
+    _ -> return Not
+lexChar '>' = consume $> GreaterThan
+lexChar '<' = consume $> LessThan
+lexChar '{' = consume $> LBrace
+lexChar '}' = consume $> RBrace
 lexChar c
   | isLetter c = lexIdentOrReserved
   | isDigit c = lexInteger
@@ -66,10 +79,21 @@ lexIdentOrReserved = lexText isLetter >>= \text -> return $
   case text of
     "let" -> Let
     "fn" -> Function
+    "if" -> If
+    "else" -> Else
+    "return" -> Return
+    "true" -> BoolLiteral True
+    "false" -> BoolLiteral False
     _ -> Ident text
 
+readInteger :: Text -> Integer
+readInteger = fst . unsafeFromRight . decimal
+  where
+  unsafeFromRight (Right x) = x
+  unsafeFromRight _ = undefined
+
 lexInteger :: Lexer Token
-lexInteger = IntLiteral <$> lexText isDigit
+lexInteger = IntLiteral . readInteger <$> lexText isDigit
 
 skipWhitespaces :: Lexer ()
 skipWhitespaces = do

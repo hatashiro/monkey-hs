@@ -18,6 +18,20 @@ let add = fn(x, y) {
 let result = add(five, ten);
 |]
 
+code2 :: Text
+code2 = [r|
+if (a == 10) {
+  return a;
+} else if (a != 20) {
+  return !a;
+} else if (a > 20) {
+  return -30 / 40 * 50;
+} else if (a < 30) {
+  return true;
+}
+return false;
+|]
+
 spec :: IO ()
 spec = hspec $
   describe "lexer" $ do
@@ -37,12 +51,12 @@ spec = hspec $
       lex code `shouldBe` [ Let
                           , Ident "five"
                           , Assign
-                          , IntLiteral "5"
+                          , IntLiteral 5
                           , SemiColon
                           , Let
                           , Ident "ten"
                           , Assign
-                          , IntLiteral "10"
+                          , IntLiteral 10
                           , SemiColon
                           , Let
                           , Ident "add"
@@ -72,3 +86,63 @@ spec = hspec $
                           , SemiColon
                           , EOF
                           ]
+
+    it "complex code 2" $ do
+      lex code2 `shouldBe` [ If
+                           , LParen
+                           , Ident "a"
+                           , Eq
+                           , IntLiteral 10
+                           , RParen
+                           , LBrace
+                           , Return
+                           , Ident "a"
+                           , SemiColon
+                           , RBrace
+                           , Else
+                           , If
+                           , LParen
+                           , Ident "a"
+                           , NotEq
+                           , IntLiteral 20
+                           , RParen
+                           , LBrace
+                           , Return
+                           , Not
+                           , Ident "a"
+                           , SemiColon
+                           , RBrace
+                           , Else
+                           , If
+                           , LParen
+                           , Ident "a"
+                           , GreaterThan
+                           , IntLiteral 20
+                           , RParen
+                           , LBrace
+                           , Return
+                           , Minus
+                           , IntLiteral 30
+                           , Divide
+                           , IntLiteral 40
+                           , Multiply
+                           , IntLiteral 50
+                           , SemiColon
+                           , RBrace
+                           , Else
+                           , If
+                           , LParen
+                           , Ident "a"
+                           , LessThan
+                           , IntLiteral 30
+                           , RParen
+                           , LBrace
+                           , Return
+                           , BoolLiteral True
+                           , SemiColon
+                           , RBrace
+                           , Return
+                           , BoolLiteral False
+                           , SemiColon
+                           , EOF
+                           ]
