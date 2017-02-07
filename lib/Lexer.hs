@@ -33,6 +33,17 @@ consume = LexerT $ do
 runLexer :: Lexer a -> Text -> a
 runLexer = ((fst . runIdentity) .) . (. initState) . runStateT . unLexerT
 
+lexChar :: Char -> Lexer Token
+lexChar '=' = consume >> return Assign
+lexChar ';' = consume >> return SemiColon
+lexChar '(' = consume >> return LParen
+lexChar ')' = consume >> return RParen
+lexChar ',' = consume >> return Comma
+lexChar '+' = consume >> return Plus
+lexChar '{' = consume >> return LBrace
+lexChar '}' = consume >> return RBrace
+lexChar _ = undefined
+
 lex :: Text -> [Token]
 lex = runLexer go
   where
@@ -40,13 +51,5 @@ lex = runLexer go
   go = do
     c <- preview
     case c of
-      Just '=' -> consume >> (Assign:) <$> go
-      Just ';' -> consume >> (SemiColon:) <$> go
-      Just '(' -> consume >> (LParen:) <$> go
-      Just ')' -> consume >> (RParen:) <$> go
-      Just ',' -> consume >> (Comma:) <$> go
-      Just '+' -> consume >> (Plus:) <$> go
-      Just '{' -> consume >> (LBrace:) <$> go
-      Just '}' -> consume >> (RBrace:) <$> go
-      Just _ -> undefined
+      Just x -> (:) <$> lexChar x <*> go
       Nothing -> return [EOF]
