@@ -15,6 +15,7 @@ library
   exposed-modules:     Lexer
                        Lexer.Token
                        Lexer.Types
+                       Utils
   build-depends:       base
                      , protolude
                      , text

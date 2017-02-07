@@ -6,6 +6,7 @@ import qualified Data.Text as T
 import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
+import           Utils (unsafeFromRight)
 
 preview :: Lexer (Maybe Char)
 preview = LexerT $ do
@@ -82,9 +83,6 @@ lexIdentOrReserved = lexText isLetter >>= \text -> return $
 
 readInteger :: Text -> Integer
 readInteger = fst . unsafeFromRight . decimal
-  where
-  unsafeFromRight (Right x) = x
-  unsafeFromRight _ = undefined
 
 lexInteger :: Lexer Token
 lexInteger = IntLiteral . readInteger <$> lexText isDigit
