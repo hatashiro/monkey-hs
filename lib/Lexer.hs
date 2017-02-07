@@ -7,12 +7,6 @@ import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
 
-next :: Lexer (Maybe Char)
-next = do
-  c <- preview
-  consume
-  return c
-
 preview :: Lexer (Maybe Char)
 preview = LexerT $ do
   LexerState left _ <- get
