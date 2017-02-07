@@ -55,12 +55,6 @@ lexChar c
   | isDigit c = lexInteger
   | otherwise = consume $> Illegal
 
-isLetter :: Char -> Bool
-isLetter = flip elem $ '_' : ['a' .. 'z'] ++ ['A' .. 'Z']
-
-isDigit :: Char -> Bool
-isDigit = flip elem ['0' .. '9']
-
 lexText :: (Char -> Bool) -> Lexer Text
 lexText f = preview >>= \maybeC ->
   case maybeC of
