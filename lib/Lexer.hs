@@ -35,7 +35,7 @@ runLexer :: Lexer a -> Text -> a
 runLexer = ((fst . runIdentity) .) . (. initState) . runStateT . unLexerT
 
 lexChar :: Char -> Lexer Token
-lexChar '=' = consume >> preview >>= \ maybeC ->
+lexChar '=' = consume >> preview >>= \maybeC ->
   case maybeC of
     Just '=' -> consume $> Eq
     _ -> return Assign
@@ -47,7 +47,7 @@ lexChar '+' = consume $> Plus
 lexChar '-' = consume $> Minus
 lexChar '*' = consume $> Multiply
 lexChar '/' = consume $> Divide
-lexChar '!' = consume >> preview >>= \ maybeC ->
+lexChar '!' = consume >> preview >>= \maybeC ->
   case maybeC of
     Just '=' -> consume $> NotEq
     _ -> return Not
@@ -96,8 +96,7 @@ lexInteger :: Lexer Token
 lexInteger = IntLiteral . readInteger <$> lexText isDigit
 
 skipWhitespaces :: Lexer ()
-skipWhitespaces = do
-  maybeC <- preview
+skipWhitespaces = preview >>= \maybeC ->
   case maybeC of
     Just ' ' -> consume >> skipWhitespaces
     Just '\t' -> consume >> skipWhitespaces
