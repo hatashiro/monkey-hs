@@ -1,6 +1,7 @@
 module Main where
 
 import Protolude
+import Repl (repl)
 
 main :: IO ()
-main = putStrLn ("hello" :: Text)
+main = putStrLn ("The Monkey programming language REPL" :: Text) >> repl

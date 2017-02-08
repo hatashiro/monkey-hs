@@ -37,6 +37,8 @@ executable mkrepl
   main-is:             Main.hs
   build-depends:       base >=4.9 && <4.10
                      , protolude
+                     , text
+                     , monkey-hs
   hs-source-dirs:      repl
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings
