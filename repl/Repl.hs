@@ -1,29 +1,30 @@
 module Repl where
 
-import Protolude hiding (putStr, evaluate)
+import Protolude hiding (evaluate)
 
-import Data.Text.IO (putStr, getLine)
+import Data.Text (pack)
 import Lexer (lex)
 import Lexer.Token (Token)
-import System.IO (hFlush, stdout)
+import System.Console.Haskeline
 
 loop :: MonadIO m => m a -> m a
 loop io = io >> loop io
 
-prompt :: Text
-prompt = "> "
-
-read :: MonadIO m => m Text
-read = liftIO $ putStr prompt >> hFlush stdout >> getLine
+read :: (MonadException m, MonadIO m) => m (Maybe Text)
+read = runInputT defaultSettings $ (fmap . fmap) pack $ getInputLine "> "
 
 evaluate :: MonadIO m => Text -> m Text
 evaluate = pure . show . lex -- FIXME
 
-rep :: MonadIO m => m ()
+rep :: (MonadException m, MonadIO m) => m ()
 rep = do
-  text <- read
-  result <- evaluate text
-  putStrLn result
+  maybeText <- read
+  case maybeText of
+    Just "" -> return ()
+    Nothing -> return ()
+    Just text -> do
+      result <- evaluate text
+      putStrLn result
 
 repl :: IO ()
 repl = loop rep
