@@ -33,11 +33,11 @@ preview = ParserT $ go . left <$> get
   go [] = Nothing
 
 consume :: Parser ()
-consume = ParserT $ get >>= go
+consume = ParserT get >>= go
   where
   go :: ParserState -> Parser ()
   go (ParserState [] _) = return ()
-  go (ParserState (x:xs) done) =
+  go (ParserState (x:xs) done) = ParserT $
     put $ ParserState xs (x:done)
 
 next :: Parser Token
