@@ -1,6 +1,12 @@
 module Main where
 
-import qualified LexerSpec as Lexer
+import Protolude
 
-main = do
-  Lexer.spec
+import Test.Hspec
+
+import qualified LexerSpec as Lexer
+import qualified ParserSpec as Parser
+
+main :: IO ()
+main = hspec $ Lexer.spec
+            >> Parser.spec

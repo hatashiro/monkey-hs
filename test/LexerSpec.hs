@@ -32,8 +32,8 @@ if (a == 10) {
 return false;
 |]
 
-spec :: IO ()
-spec = hspec $
+spec :: Spec
+spec = do
   describe "lexer" $ do
     it "special chars" $ do
       lex "=+(){},;" `shouldBe` [ Assign
