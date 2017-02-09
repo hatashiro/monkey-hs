@@ -11,19 +11,24 @@ data ParserState = ParserState { left :: [Token], done :: [Token] }
 initState :: [Token] -> ParserState
 initState = flip ParserState []
 
-newtype ParserT m a = ParserT { runParserT :: StateT ParserState m a }
+newtype ParserT e m a = ParserT { runParserT :: StateT ParserState (ExceptT e m) a }
 
-instance Functor m => Functor (ParserT m) where
+instance Functor m => Functor (ParserT e m) where
   fmap f (ParserT s) = ParserT $ fmap f s
 
-instance Monad m => Applicative (ParserT m) where
+instance Monad m => Applicative (ParserT e m) where
   pure = ParserT . pure
   (ParserT f) <*> (ParserT a) = ParserT $ f <*> a
 
-instance Monad m => Monad (ParserT m) where
+instance Monad m => Monad (ParserT e m) where
   (ParserT m) >>= f = ParserT $ m >>= runParserT . f
 
-type Parser = ParserT Identity
+instance (Monoid e, Monad m) => Alternative (ParserT e m) where
+  empty = undefined
+  (<|>) = undefined
+
+type ParseError = [Text]
+type Parser = ParserT ParseError Identity
 
 preview :: Parser (Maybe Token)
 preview = ParserT $ go . left <$> get
