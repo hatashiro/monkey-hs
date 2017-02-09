@@ -6,32 +6,7 @@ import qualified Data.Text as T
 import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
-import           Unsafe (unsafeFromJust)
 import           Utils (unsafeFromRight, isLetter, isDigit, (<||>), (<<))
-
-preview :: Lexer (Maybe Char)
-preview = LexerT $ do
-  LexerState left _ <- get
-  if T.length left == 0
-  then
-    return Nothing
-  else
-    return . Just $ T.head left
-
-consume :: Lexer ()
-consume = LexerT $ do
-  LexerState left done <- get
-  if T.length left == 0
-  then
-    return ()
-  else do
-    put $ LexerState (T.tail left) (T.snoc done $ T.head left)
-
-next :: Lexer Char
-next = unsafeFromJust <$> preview << consume
-
-runLexer :: Lexer a -> Text -> a
-runLexer = ((fst . runIdentity) .) . (. initState) . runStateT . unLexerT
 
 lexChar :: Char -> Lexer Token
 lexChar '=' = consume >> preview >>= \maybeC ->
