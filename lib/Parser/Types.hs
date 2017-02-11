@@ -47,6 +47,3 @@ consume = ParserT get >>= go
 
 next :: Parser Token
 next = unsafeFromJust <$> preview << consume
-
-runParser :: Parser a -> [Token] -> a
-runParser = ((fst . runIdentity) .) . (. initState) . runStateT . runParserT
