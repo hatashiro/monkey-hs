@@ -12,7 +12,9 @@ extra-source-files:  ChangeLog.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Lexer
+  exposed-modules:     Common.ParserT
+                       Common.Stream
+                       Lexer
                        Lexer.Token
                        Lexer.Types
                        Parser.AST
