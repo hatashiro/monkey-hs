@@ -2,11 +2,12 @@ module Lexer where
 
 import Protolude
 
+import           Common.ParserT (consume, preview, next)
 import qualified Data.Text as T
 import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
-import           Utils (unsafeFromRight, isLetter, isDigit, (<||>), (<<))
+import           Utils (unsafeFromRight, isLetter, isDigit, (<||>))
 
 lexChar :: Char -> Lexer Token
 lexChar '=' = consume >> preview >>= \maybeC ->
@@ -72,7 +73,7 @@ skipWhitespaces = preview >>= \maybeC ->
     _ -> return ()
 
 lex :: Text -> [Token]
-lex = runLexer go
+lex = execLexer go
   where
   go :: Lexer [Token]
   go = do
