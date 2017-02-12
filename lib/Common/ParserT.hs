@@ -4,6 +4,7 @@ module Common.ParserT where
 import Protolude
 
 import qualified Common.Stream as S
+import           Control.Exception (throw)
 import qualified Data.Text as T
 import           Unsafe (unsafeFromJust)
 import           Utils ((<<))
@@ -38,5 +39,9 @@ consume = ParserT $ do
 next :: (Monad m, S.Stream s a) => ParserT s e m a
 next = unsafeFromJust <$> preview << consume
 
-execParserT :: (Monad m, S.Stream s a) => ParserT s e m x -> s -> x
-execParserT parser s = undefined
+execParserT :: (Monad m, S.Stream s a, Exception e) => ParserT s e m x -> s -> m x
+execParserT parser s = do
+  result <- runExceptT $ runStateT (runParserT parser) (ParserState s)
+  case result of
+    Left e -> throw e
+    Right (a, _) -> return a
