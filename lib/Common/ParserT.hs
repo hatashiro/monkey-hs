@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Common.ParserT where
 
 import Protolude
@@ -24,13 +25,17 @@ instance Monad m => Applicative (ParserT s e m) where
 instance Monad m => Monad (ParserT s e m) where
   (ParserT m) >>= f = ParserT $ m >>= runParserT . f
 
+instance Monad m => MonadState (ParserState s) (ParserT s e m) where
+  get = ParserT get
+  put = ParserT . put
+
 preview :: (Monad m, S.Stream s a) => ParserT s e m (Maybe a)
-preview = ParserT $ do
+preview = do
   ParserState stream <- get
   return $ fst <$> S.read stream
 
 consume :: (Monad m, S.Stream s a) => ParserT s e m ()
-consume = ParserT $ do
+consume = do
   ParserState stream <- get
   case S.read stream of
     Nothing -> return ()
