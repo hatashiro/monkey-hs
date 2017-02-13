@@ -39,6 +39,7 @@ executable mki
 
 executable mkrepl
   main-is:             Main.hs
+  other-modules:       Repl
   build-depends:       base >=4.9 && <4.10
                      , protolude
                      , text
@@ -55,6 +56,7 @@ test-suite monkey-hs-test
   main-is:             Main.hs
   other-modules:       LexerSpec
                        ParserSpec
+                       ParserTSpec
   build-depends:       base
                      , protolude
                      , monkey-hs
