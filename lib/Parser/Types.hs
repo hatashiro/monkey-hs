@@ -8,9 +8,7 @@ import Lexer.Token
 newtype ParserError = ParserError Text
                     deriving (Show, Typeable)
 
-instance Exception ParserError
-
-type Parser = ParserT [Token] ParserError Identity
+type Parser = ParserT [Token] Identity
 
 execParser :: Parser a -> [Token] -> a
 execParser = (runIdentity .) . execParserT

@@ -6,10 +6,7 @@ import Common.ParserT
 
 import Test.Hspec
 
-newtype E = E Text deriving (Show, Typeable)
-instance Exception E
-
-type Parser m = ParserT [Integer] E m
+type Parser m = ParserT [Integer] m
 
 spec :: Spec
 spec = describe "ParserT" $ do
@@ -19,6 +16,9 @@ spec = describe "ParserT" $ do
       parser = (,,) <$> next <*> next <*> next
     in
       execParserT parser [1, 2, 3] `shouldBe` Identity (1, 2, 3)
+
+  it "fail" $
+    execParserT (fail "it fails!") [] `shouldThrow` (== ParserError "it fails!")
 
   it "try" $
     let
