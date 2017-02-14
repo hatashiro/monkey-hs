@@ -33,3 +33,13 @@ spec = describe "ParserT" $ do
     in do
       execParserT parseTest [1..20] `shouldThrow` (== ParserError "fail to parse [7,8,7]")
       execParserT (parse [1, 2, 3]) [] `shouldThrow` (== ParserError "unexpected eof")
+
+  it "<|>" $ do
+    execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [1..6] `shouldBe` Identity [1, 2, 3]
+    execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [4, 5, 6, 1, 2, 3] `shouldBe` Identity [4, 5, 6]
+    execParserT (empty <|> parse [4, 5, 6]) [4, 5, 6, 1, 2, 3] `shouldBe` Identity [4, 5, 6]
+    execParserT (parse [4, 5, 6] <|> empty) [4, 5, 6, 1, 2, 3] `shouldBe` Identity [4, 5, 6]
+    execParserT (parse [1, 2, 3] <|> empty) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "empty")
+    execParserT (empty <|> parse [1, 2, 3]) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "fail to parse [1,2,3]")
+    execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [10..] `shouldThrow` (== ParserError "fail to parse [4,5,6]")
+    execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [] `shouldThrow` (== ParserError "unexpected eof")

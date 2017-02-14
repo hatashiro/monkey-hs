@@ -1,5 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Common.ParserT where
 
 import Protolude
@@ -44,6 +45,10 @@ instance Monad m => MonadError (ParserError) (ParserT s m) where
 
 instance MonadTrans (ParserT s) where
   lift = ParserT . lift . lift
+
+instance Monad m => Alternative (ParserT s m) where
+  empty = fail "empty" -- not really an identity
+  p1 <|> p2 = p1 `catchError` \(_ :: ParserError) -> p2
 
 preview :: (Monad m, S.Stream s a) => ParserT s m (Maybe a)
 preview = do
