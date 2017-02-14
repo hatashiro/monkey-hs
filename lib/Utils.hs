@@ -1,3 +1,6 @@
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE RankNTypes #-}
 module Utils where
 
 import Protolude
@@ -20,3 +23,9 @@ isDigit = flip elem ['0' .. '9']
 
 (<<) :: Monad m => m a -> m b -> m a
 ma << mb = ma >>= \a -> mb $> a
+
+type (~>) f1 f2 = forall a. f1 a -> f2 a
+
+returnOrThrow :: (MonadError e m) => e -> Maybe ~> m
+returnOrThrow e (Just a) = return a
+returnOrThrow e Nothing = throwError e

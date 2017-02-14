@@ -20,10 +20,16 @@ spec = describe "ParserT" $ do
   it "fail" $
     execParserT (fail "it fails!") [] `shouldThrow` (== ParserError "it fails!")
 
-  it "try" $
+  it "parse" $
     let
-      tryTest :: Monad m => Parser m ()
-      tryTest = do
-        return ()
-    in
-      execParserT tryTest [1..] :: Expectation
+      parseTest :: Parser IO ()
+      parseTest = do
+        a1 <- parse [1, 2, 3]
+        lift $ a1 `shouldBe` [1, 2, 3]
+        a2 <- parse [4, 5, 6]
+        lift $ a2 `shouldBe` [4, 5, 6]
+        _ <- parse [7, 8, 7]
+        lift $ expectationFailure "should fail in the previous line"
+    in do
+      execParserT parseTest [1..20] `shouldThrow` (== ParserError "fail to parse [7,8,7]")
+      execParserT (parse [1, 2, 3]) [] `shouldThrow` (== ParserError "unexpected eof")

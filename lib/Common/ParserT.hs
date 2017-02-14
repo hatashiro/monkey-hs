@@ -8,8 +8,7 @@ import qualified Common.Stream as S
 import           Control.Exception (throw)
 import           Control.Monad.Trans.Class (MonadTrans(..))
 import qualified Data.Text as T
-import           Unsafe (unsafeFromJust)
-import           Utils ((<<))
+import           Utils ((<<), returnOrThrow)
 
 newtype ParserState s = ParserState { stream :: s }
                       deriving (Show, Eq)
@@ -18,6 +17,9 @@ newtype ParserError = ParserError Text
                     deriving (Show, Eq, Typeable)
 
 instance Exception ParserError
+
+unexpected :: Text -> ParserError
+unexpected = ParserError . (T.append "unexpected ")
 
 newtype ParserT s m a = ParserT
   { runParserT :: StateT (ParserState s) (ExceptT ParserError m) a }
@@ -56,10 +58,22 @@ consume = do
     Just (_, s) -> put $ ParserState s
 
 next :: (Monad m, S.Stream s a) => ParserT s m a
-next = unsafeFromJust <$> preview << consume
+next = preview << consume >>= returnOrThrow (unexpected "eof")
 
-fail :: (Monad m) => Text -> ParserT s m a
-fail = throwError . ParserError
+parse :: (Monad m, S.Stream s a, Show s, Eq a) => s -> ParserT s m s
+parse s = go s $> s
+  where
+  go :: (Monad m, S.Stream s a, Show s, Eq a) => s -> ParserT s m ()
+  go s' = case S.read s' of
+            Nothing -> return ()
+            Just (a, s'') -> do
+              a' <- next
+              if a == a'
+              then go s''
+              else fail $ "fail to parse " ++ show s
+
+fail :: Monad m => [Char] -> ParserT s m a
+fail = throwError . ParserError . T.pack
 
 execParserT :: (Monad m, S.Stream s a) => ParserT s m x -> s -> m x
 execParserT parser s = do

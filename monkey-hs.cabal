@@ -23,6 +23,7 @@ library
   build-depends:       base
                      , protolude
                      , text
+                     , transformers
   hs-source-dirs:      lib
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings
