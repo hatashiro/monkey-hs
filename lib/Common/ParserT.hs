@@ -6,6 +6,7 @@ import Protolude
 
 import qualified Common.Stream as S
 import           Control.Exception (throw)
+import           Control.Monad.Trans.Class (MonadTrans(..))
 import qualified Data.Text as T
 import           Unsafe (unsafeFromJust)
 import           Utils ((<<))
@@ -38,6 +39,9 @@ instance Monad m => MonadState (ParserState s) (ParserT s m) where
 instance Monad m => MonadError (ParserError) (ParserT s m) where
   throwError = ParserT . throwError
   ParserT p `catchError` f = ParserT $ p `catchError` (runParserT . f)
+
+instance MonadTrans (ParserT s) where
+  lift = ParserT . lift . lift
 
 preview :: (Monad m, S.Stream s a) => ParserT s m (Maybe a)
 preview = do
