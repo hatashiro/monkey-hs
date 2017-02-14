@@ -7,7 +7,7 @@ import           Common.ParserT
 import qualified Data.Text as T
 import           Lexer.Token
 import           Lexer.Types
-import           Utils (unsafeFromRight, letter, digit, (<||>))
+import           Utils (unsafeFromRight, isLetter, isDigit, (<||>))
 
 lexToken :: Lexer Token
 lexToken = choose
@@ -19,7 +19,7 @@ lexToken = choose
   ]
 
 parseMap :: Text -> Token -> Lexer Token
-parseMap str tkn = parse str $> tkn
+parseMap str tkn = string str $> tkn
 
 lexOperator :: Lexer Token
 lexOperator = choose
@@ -45,9 +45,15 @@ lexPunctuation = choose
   , parseMap "}" RBrace
   ]
 
+letter :: Lexer Char
+letter = predicate isLetter
+
+digit :: Lexer Char
+digit = predicate isDigit
+
 lexReservedOrIdent :: Lexer Token
 lexReservedOrIdent = do
-  str <- (:) <$> one letter <*> many (letter <||> digit)
+  str <- (:) <$> letter <*> many (letter <|> digit)
   return $ case str of
     "let" -> Let
     "fn" -> Function
@@ -65,7 +71,7 @@ lexIllegal :: Lexer Token
 lexIllegal = consume $> Illegal
 
 skipWhitespaces :: Lexer ()
-skipWhitespaces = many (`elem` [' ', '\t', '\n', '\r']) >> return ()
+skipWhitespaces = many (predicate $ flip elem [' ', '\t', '\n', '\r']) >> return ()
 
 lex :: Text -> [Token]
 lex = execLexer go

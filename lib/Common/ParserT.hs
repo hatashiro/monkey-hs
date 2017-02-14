@@ -62,8 +62,15 @@ consume = do
 next :: (Monad m, S.Stream s a) => ParserT s m a
 next = preview << consume >>= returnOrThrow (ParserError "unexpected end of stream")
 
-parse :: (Monad m, S.Stream s a, Show s, Eq a) => s -> ParserT s m s
-parse s = go s $> s
+atom :: (Monad m, S.Stream s a, Show a, Eq a) => a -> ParserT s m a
+atom a = do
+  a' <- next
+  if a == a'
+  then return a
+  else fail $ "fail to parse " ++ show a
+
+string :: (Monad m, S.Stream s a, Show s, Eq a) => s -> ParserT s m s
+string s = go s $> s
   where
   go :: (Monad m, S.Stream s a, Show s, Eq a) => s -> ParserT s m ()
   go s' = case S.read s' of
@@ -79,19 +86,19 @@ choose [] = empty
 choose [x] = x
 choose (x:xs) = x <|> choose xs
 
-one :: (Monad m, S.Stream s a, Show a) => (a -> Bool) -> ParserT s m a
-one f = do
+predicate :: (Monad m, S.Stream s a, Show a) => (a -> Bool) -> ParserT s m a
+predicate f = do
   a <- next
   if f a
   then return a
   else fail $ "unexpected " ++ show a
 
-many :: (Monad m, S.Stream s a) => (a -> Bool) -> ParserT s m [a]
-many f = do
-  maybe <- preview
+many :: Monad m => ParserT s m a -> ParserT s m [a]
+many parser = do
+  maybe <- (Just <$> parser) `catchError` \(_ :: ParserError) -> return Nothing
   case maybe of
-    Just a | f a -> consume >> (a:) <$> many f
-    _ -> return []
+    Just a -> (a:) <$> many parser
+    Nothing -> return []
 
 fail :: Monad m => [Char] -> ParserT s m a
 fail = throwError . ParserError . T.pack
