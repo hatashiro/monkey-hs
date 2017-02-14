@@ -7,11 +7,16 @@ import Lexer.Token
 newtype Program = Program [Stmt]
                 deriving (Show, Eq)
 
-data Stmt = LetStatement Ident Expr
+data Stmt = LetStmt Ident Expr
           deriving (Show, Eq)
 
 data Expr = IdentExpr Ident
+          | LitExpr Literal
           deriving (Show, Eq)
+
+data Literal = IntLiteral Integer
+             | BoolLiteral Bool
+             deriving (Show, Eq)
 
 newtype Ident = Ident Text
               deriving (Show, Eq)
