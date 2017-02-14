@@ -17,6 +17,7 @@ library
                        Lexer
                        Lexer.Token
                        Lexer.Types
+                       Parser
                        Parser.AST
                        Parser.Types
                        Utils
