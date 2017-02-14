@@ -43,3 +43,37 @@ spec = describe "ParserT" $ do
     execParserT (empty <|> parse [1, 2, 3]) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "fail to parse [1,2,3]")
     execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [10..] `shouldThrow` (== ParserError "fail to parse [4,5,6]")
     execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [] `shouldThrow` (== ParserError "unexpected eof")
+
+  it "choose" $ do
+    execParserT (
+      choose [ parse [1, 2, 3]
+             , parse [4, 5, 6, 7]
+             , parse [4, 5, 6]
+             ]
+      )
+      [1..] `shouldBe` Identity [1, 2, 3]
+    execParserT (
+      choose [ parse [1, 2, 3]
+             , parse [4, 5, 6, 7]
+             , parse [4, 5, 6]
+             ]
+      )
+      [4..] `shouldBe` Identity [4, 5, 6, 7]
+    execParserT (
+      choose [ parse [1, 2, 3]
+             , parse [4, 5, 6, 7]
+             , parse [4, 5, 6]
+             ]
+      )
+      [4, 5, 6, 5] `shouldBe` Identity [4, 5, 6]
+    execParserT (
+      choose [ parse [1, 2, 3]
+             , parse [4, 5, 6, 7]
+             , parse [4, 5, 6]
+             ]
+      )
+      [5..] `shouldThrow` (== ParserError "fail to parse [4,5,6]")
+    execParserT (
+      choose []
+      )
+      [5..] `shouldThrow` (== ParserError "empty")

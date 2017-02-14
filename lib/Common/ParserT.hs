@@ -77,6 +77,11 @@ parse s = go s $> s
               then go s''
               else fail $ "fail to parse " ++ show s
 
+choose :: Monad m => [ParserT s m a] -> ParserT s m a
+choose [] = empty
+choose [x] = x
+choose (x:xs) = x <|> choose xs
+
 fail :: Monad m => [Char] -> ParserT s m a
 fail = throwError . ParserError . T.pack
 
