@@ -14,13 +14,14 @@ parseProgram = Program <$> many parseStmt
 parseStmt :: Parser Stmt
 parseStmt = choose
   [ parseLetStmt
+  , parseReturnStmt
   ]
 
 parseIdent :: Parser Ident
-parseIdent = next >>= \tkn ->
-  case tkn of
-    Tk.Ident name -> return $ Ident name
-    _ -> fail "fail to parse an identifier"
+parseIdent = next >>= go
+  where
+  go (Tk.Ident name) = return $ Ident name
+  go _ = fail "fail to parse an identifier"
 
 parseLetStmt :: Parser Stmt
 parseLetStmt = do
@@ -31,23 +32,33 @@ parseLetStmt = do
   atom Tk.SemiColon
   return $ LetStmt ident expr
 
+parseReturnStmt :: Parser Stmt
+parseReturnStmt = do
+  atom Tk.Return
+  expr <- parseExpr
+  atom Tk.SemiColon
+  return $ ReturnStmt expr
+
 parseExpr :: Parser Expr
 parseExpr = choose
   [ parseLitExpr
   ]
 
+parseLiteral :: Parser Literal
+parseLiteral = next >>= go
+  where
+  go (Tk.IntLiteral i) = return $ IntLiteral i
+  go (Tk.BoolLiteral b) = return $ BoolLiteral b
+  go _ = fail "fail to parse a literal"
+
 parseLitExpr :: Parser Expr
-parseLitExpr = fmap LitExpr $ next >>= \tkn ->
-  case tkn of
-    Tk.IntLiteral i -> return $ IntLiteral i
-    Tk.BoolLiteral b -> return $ BoolLiteral b
-    _ -> fail "fail to parse a literal"
+parseLitExpr = LitExpr <$> parseLiteral
 
 finish :: Parser ()
-finish = next >>= \tkn ->
-  case tkn of
-    Tk.EOF -> return ()
-    _ -> fail $ "unexpected token: " ++ show tkn
+finish = next >>= go
+  where
+  go Tk.EOF = return ()
+  go tkn = fail $ "unexpected token: " ++ show tkn
 
 parse :: [Tk.Token] -> Program
 parse = execParser (parseProgram << finish)

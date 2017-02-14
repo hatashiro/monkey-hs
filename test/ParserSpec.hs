@@ -17,6 +17,14 @@ let foobar = 838383;
 let boo = true;
 |]
 
+exReturnStmts :: Text
+exReturnStmts = [r|
+return 5;
+return 10;
+return 838383;
+return true;
+|]
+
 synAna :: Text -> Program
 synAna = parse . lex
 
@@ -26,9 +34,16 @@ spec = do
     it "empty" $
       synAna "" `shouldBe` Program []
 
-    it "let declarations" $
+    it "let statements" $
       synAna exLetStmts `shouldBe` Program [ LetStmt (Ident "x") (LitExpr (IntLiteral 5))
                                            , LetStmt (Ident "y") (LitExpr (IntLiteral 10))
                                            , LetStmt (Ident "foobar") (LitExpr (IntLiteral 838383))
                                            , LetStmt (Ident "boo") (LitExpr (BoolLiteral True))
                                            ]
+
+    it "return statements" $
+      synAna exReturnStmts `shouldBe` Program [ ReturnStmt (LitExpr (IntLiteral 5))
+                                              , ReturnStmt (LitExpr (IntLiteral 10))
+                                              , ReturnStmt (LitExpr (IntLiteral 838383))
+                                              , ReturnStmt (LitExpr (BoolLiteral True))
+                                              ]
