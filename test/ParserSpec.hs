@@ -14,6 +14,7 @@ exLetStmts = [r|
 let x = 5;
 let y = 10;
 let foobar = 838383;
+let boo = true;
 |]
 
 synAna :: Text -> Program
@@ -29,4 +30,5 @@ spec = do
       synAna exLetStmts `shouldBe` Program [ LetStmt (Ident "x") (LitExpr (IntLiteral 5))
                                            , LetStmt (Ident "y") (LitExpr (IntLiteral 10))
                                            , LetStmt (Ident "foobar") (LitExpr (IntLiteral 838383))
+                                           , LetStmt (Ident "boo") (LitExpr (BoolLiteral True))
                                            ]
