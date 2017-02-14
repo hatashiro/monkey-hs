@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Common.ParserT where
 
-import Protolude
+import Protolude hiding (many)
 
 import qualified Common.Stream as S
 import           Control.Exception (throw)
@@ -18,9 +18,6 @@ newtype ParserError = ParserError Text
                     deriving (Show, Eq, Typeable)
 
 instance Exception ParserError
-
-unexpected :: Text -> ParserError
-unexpected = ParserError . (T.append "unexpected ")
 
 newtype ParserT s m a = ParserT
   { runParserT :: StateT (ParserState s) (ExceptT ParserError m) a }
@@ -39,7 +36,7 @@ instance Monad m => MonadState (ParserState s) (ParserT s m) where
   get = ParserT get
   put = ParserT . put
 
-instance Monad m => MonadError (ParserError) (ParserT s m) where
+instance Monad m => MonadError ParserError (ParserT s m) where
   throwError = ParserT . throwError
   ParserT p `catchError` f = ParserT $ p `catchError` (runParserT . f)
 
@@ -63,7 +60,7 @@ consume = do
     Just (_, s) -> put $ ParserState s
 
 next :: (Monad m, S.Stream s a) => ParserT s m a
-next = preview << consume >>= returnOrThrow (unexpected "eof")
+next = preview << consume >>= returnOrThrow (ParserError "unexpected end of stream")
 
 parse :: (Monad m, S.Stream s a, Show s, Eq a) => s -> ParserT s m s
 parse s = go s $> s
@@ -81,6 +78,20 @@ choose :: Monad m => [ParserT s m a] -> ParserT s m a
 choose [] = empty
 choose [x] = x
 choose (x:xs) = x <|> choose xs
+
+one :: (Monad m, S.Stream s a, Show a) => (a -> Bool) -> ParserT s m a
+one f = do
+  a <- next
+  if f a
+  then return a
+  else fail $ "unexpected " ++ show a
+
+many :: (Monad m, S.Stream s a) => (a -> Bool) -> ParserT s m [a]
+many f = do
+  maybe <- preview
+  case maybe of
+    Just a | f a -> consume >> (a:) <$> many f
+    _ -> return []
 
 fail :: Monad m => [Char] -> ParserT s m a
 fail = throwError . ParserError . T.pack

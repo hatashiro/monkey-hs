@@ -1,6 +1,6 @@
 module ParserTSpec where
 
-import Protolude
+import Protolude hiding (one, many)
 
 import Common.ParserT
 
@@ -32,7 +32,7 @@ spec = describe "ParserT" $ do
         lift $ expectationFailure "should fail in the previous line"
     in do
       execParserT parseTest [1..20] `shouldThrow` (== ParserError "fail to parse [7,8,7]")
-      execParserT (parse [1, 2, 3]) [] `shouldThrow` (== ParserError "unexpected eof")
+      execParserT (parse [1, 2, 3]) [] `shouldThrow` (== ParserError "unexpected end of stream")
 
   it "<|>" $ do
     execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [1..6] `shouldBe` Identity [1, 2, 3]
@@ -42,7 +42,7 @@ spec = describe "ParserT" $ do
     execParserT (parse [1, 2, 3] <|> empty) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "empty")
     execParserT (empty <|> parse [1, 2, 3]) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "fail to parse [1,2,3]")
     execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [10..] `shouldThrow` (== ParserError "fail to parse [4,5,6]")
-    execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [] `shouldThrow` (== ParserError "unexpected eof")
+    execParserT (parse [1, 2, 3] <|> parse [4, 5, 6]) [] `shouldThrow` (== ParserError "unexpected end of stream")
 
   it "choose" $ do
     execParserT (
@@ -77,3 +77,14 @@ spec = describe "ParserT" $ do
       choose []
       )
       [5..] `shouldThrow` (== ParserError "empty")
+
+  it "one" $ do
+    execParserT (one (< 5)) [1..] `shouldBe` Identity 1
+    execParserT (one (< 5)) [4..] `shouldBe` Identity 4
+    execParserT (one (< 5)) [5..] `shouldThrow` (== ParserError "unexpected 5")
+
+  it "many" $ do
+    execParserT (many (< 5)) [1..4] `shouldBe` Identity [1..4]
+    execParserT (many (< 5)) [1..] `shouldBe` Identity [1..4]
+    execParserT (many (< 5)) [4..] `shouldBe` Identity [4]
+    execParserT (many (< 5)) [5..] `shouldBe` Identity []
