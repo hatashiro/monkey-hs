@@ -1,53 +1,54 @@
 module Lexer where
 
-import Protolude
+import Prelude (read)
+import Protolude hiding (one, many)
 
-import           Common.ParserT (consume, preview, next)
+import           Common.ParserT
 import qualified Data.Text as T
-import           Data.Text.Read (decimal)
 import           Lexer.Token
 import           Lexer.Types
-import           Utils (unsafeFromRight, isLetter, isDigit, (<||>))
+import           Utils (unsafeFromRight, letter, digit, (<||>))
 
-lexChar :: Char -> Lexer Token
-lexChar '=' = consume >> preview >>= \maybeC ->
-  case maybeC of
-    Just '=' -> consume $> Eq
-    _ -> return Assign
-lexChar ';' = consume $> SemiColon
-lexChar '(' = consume $> LParen
-lexChar ')' = consume $> RParen
-lexChar ',' = consume $> Comma
-lexChar '+' = consume $> Plus
-lexChar '-' = consume $> Minus
-lexChar '*' = consume $> Multiply
-lexChar '/' = consume $> Divide
-lexChar '!' = consume >> preview >>= \maybeC ->
-  case maybeC of
-    Just '=' -> consume $> NotEq
-    _ -> return Not
-lexChar '>' = consume $> GreaterThan
-lexChar '<' = consume $> LessThan
-lexChar '{' = consume $> LBrace
-lexChar '}' = consume $> RBrace
-lexChar c
-  | isLetter c = lexIdentOrReserved
-  | isDigit c = lexInteger
-  | otherwise = consume $> Illegal
+lexToken :: Lexer Token
+lexToken = choose
+  [ lexOperator
+  , lexPunctuation
+  , lexReservedOrIdent
+  , lexInteger
+  , lexIllegal
+  ]
 
-lexText :: (Char -> Bool) -> Lexer Text
-lexText f = preview >>= \maybeC ->
-  case maybeC of
-    Just c ->
-      if f c
-      then consume >> T.cons c <$> lexText f
-      else return ""
-    Nothing -> return ""
+parseMap :: Text -> Token -> Lexer Token
+parseMap str tkn = parse str $> tkn
 
-lexIdentOrReserved :: Lexer Token
-lexIdentOrReserved = do
-  text <- T.cons <$> next <*> lexText (isLetter <||> isDigit)
-  return $ case text of
+lexOperator :: Lexer Token
+lexOperator = choose
+  [ parseMap "==" Eq
+  , parseMap "="  Assign
+  , parseMap "+"  Plus
+  , parseMap "-"  Minus
+  , parseMap "*"  Multiply
+  , parseMap "/"  Divide
+  , parseMap "!=" NotEq
+  , parseMap "!"  Not
+  , parseMap ">"  GreaterThan
+  , parseMap "<"  LessThan
+  ]
+
+lexPunctuation :: Lexer Token
+lexPunctuation = choose
+  [ parseMap ";" SemiColon
+  , parseMap "," Comma
+  , parseMap "(" LParen
+  , parseMap ")" RParen
+  , parseMap "{" LBrace
+  , parseMap "}" RBrace
+  ]
+
+lexReservedOrIdent :: Lexer Token
+lexReservedOrIdent = do
+  str <- (:) <$> one letter <*> many (letter <||> digit)
+  return $ case str of
     "let" -> Let
     "fn" -> Function
     "if" -> If
@@ -55,22 +56,16 @@ lexIdentOrReserved = do
     "return" -> Return
     "true" -> BoolLiteral True
     "false" -> BoolLiteral False
-    _ -> Ident text
-
-readInteger :: Text -> Integer
-readInteger = fst . unsafeFromRight . decimal
+    _ -> Ident (T.pack str)
 
 lexInteger :: Lexer Token
-lexInteger = IntLiteral . readInteger <$> lexText isDigit
+lexInteger = IntLiteral . read <$> many digit
+
+lexIllegal :: Lexer Token
+lexIllegal = consume $> Illegal
 
 skipWhitespaces :: Lexer ()
-skipWhitespaces = preview >>= \maybeC ->
-  case maybeC of
-    Just ' ' -> consume >> skipWhitespaces
-    Just '\t' -> consume >> skipWhitespaces
-    Just '\n' -> consume >> skipWhitespaces
-    Just '\r' -> consume >> skipWhitespaces
-    _ -> return ()
+skipWhitespaces = many (`elem` [' ', '\t', '\n', '\r']) >> return ()
 
 lex :: Text -> [Token]
 lex = execLexer go
@@ -80,5 +75,5 @@ lex = execLexer go
     skipWhitespaces
     c <- preview
     case c of
-      Just x -> (:) <$> lexChar x <*> go
       Nothing -> return [EOF]
+      Just x -> (:) <$> lexToken <*> go

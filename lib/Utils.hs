@@ -9,11 +9,11 @@ unsafeFromRight :: Either b a -> a
 unsafeFromRight (Right x) = x
 unsafeFromRight _ = undefined
 
-isLetter :: Char -> Bool
-isLetter = flip elem $ '_' : ['a' .. 'z'] ++ ['A' .. 'Z']
+letter :: Char -> Bool
+letter = flip elem $ '_' : ['a' .. 'z'] ++ ['A' .. 'Z']
 
-isDigit :: Char -> Bool
-isDigit = flip elem ['0' .. '9']
+digit :: Char -> Bool
+digit = flip elem ['0' .. '9']
 
 (<||>) :: Monad m => m Bool -> m Bool -> m Bool
 (<||>) = liftM2 (||)
