@@ -43,5 +43,11 @@ parseLitExpr = fmap LitExpr $ next >>= \tkn ->
     Tk.BoolLiteral b -> return $ BoolLiteral b
     _ -> fail "fail to parse a literal"
 
+finish :: Parser ()
+finish = next >>= \tkn ->
+  case tkn of
+    Tk.EOF -> return ()
+    _ -> fail $ "unexpected token: " ++ show tkn
+
 parse :: [Tk.Token] -> Program
-parse = execParser (parseProgram << atom Tk.EOF)
+parse = execParser (parseProgram << finish)
