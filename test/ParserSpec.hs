@@ -65,5 +65,6 @@ spec = do
                                             , ReturnStmt (LitExpr (BoolLiteral False))
                                             ]
 
-    it "identifier" $
+    it "identifier" $ do
       synAna "foobar;" `shouldBe` Program [ ExprStmt (IdentExpr (Ident "foobar")) ]
+      synAna "foobar" `shouldBe` Program [ ExprStmt (IdentExpr (Ident "foobar")) ]

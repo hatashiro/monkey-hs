@@ -1,6 +1,6 @@
 module Parser where
 
-import Protolude hiding (one, many)
+import Protolude hiding (one, many, optional)
 
 import           Common.ParserT
 import qualified Lexer.Token as Tk
@@ -41,7 +41,10 @@ parseReturnStmt = do
   return $ ReturnStmt expr
 
 parseExprStmt :: Parser Stmt
-parseExprStmt = ExprStmt <$> parseExpr << atom Tk.SemiColon
+parseExprStmt = ExprStmt <$> do
+  expr <- parseExpr
+  optional $ atom Tk.SemiColon
+  return expr
 
 parseExpr :: Parser Expr
 parseExpr = choose
