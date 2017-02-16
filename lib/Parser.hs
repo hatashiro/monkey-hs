@@ -55,6 +55,12 @@ parseLiteral = next >>= go
   go (Tk.BoolLiteral b) = return $ BoolLiteral b
   go _ = fail "fail to parse a literal"
 
+parsePrefixExpr :: Parser Expr
+parsePrefixExpr = undefined
+
+parseInfixExpr :: Parser Expr -> Parser Expr
+parseInfixExpr left = undefined
+
 parseLitExpr :: Parser Expr
 parseLitExpr = LitExpr <$> parseLiteral
 
