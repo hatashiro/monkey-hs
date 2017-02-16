@@ -25,6 +25,15 @@ return 838383;
 return true;
 |]
 
+exSomeStmts :: Text
+exSomeStmts = [r|
+let x = 5;
+return 10;
+15;
+let y = 20;
+return false;
+|]
+
 synAna :: Text -> Program
 synAna = parse . lex
 
@@ -47,3 +56,11 @@ spec = do
                                               , ReturnStmt (LitExpr (IntLiteral 838383))
                                               , ReturnStmt (LitExpr (BoolLiteral True))
                                               ]
+
+    it "some statements" $
+      synAna exSomeStmts `shouldBe` Program [ LetStmt (Ident "x") (LitExpr (IntLiteral 5))
+                                            , ReturnStmt (LitExpr (IntLiteral 10))
+                                            , ExprStmt (LitExpr (IntLiteral 15))
+                                            , LetStmt (Ident "y") (LitExpr (IntLiteral 20))
+                                            , ReturnStmt (LitExpr (BoolLiteral False))
+                                            ]

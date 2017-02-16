@@ -9,6 +9,7 @@ newtype Program = Program [Stmt]
 
 data Stmt = LetStmt Ident Expr
           | ReturnStmt Expr
+          | ExprStmt Expr
           deriving (Show, Eq)
 
 data Expr = IdentExpr Ident

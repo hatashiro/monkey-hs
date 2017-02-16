@@ -15,6 +15,7 @@ parseStmt :: Parser Stmt
 parseStmt = choose
   [ parseLetStmt
   , parseReturnStmt
+  , parseExprStmt
   ]
 
 parseIdent :: Parser Ident
@@ -38,6 +39,9 @@ parseReturnStmt = do
   expr <- parseExpr
   atom Tk.SemiColon
   return $ ReturnStmt expr
+
+parseExprStmt :: Parser Stmt
+parseExprStmt = ExprStmt <$> parseExpr << atom Tk.SemiColon
 
 parseExpr :: Parser Expr
 parseExpr = choose
