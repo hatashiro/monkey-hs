@@ -46,6 +46,7 @@ parseExprStmt = ExprStmt <$> parseExpr << atom Tk.SemiColon
 parseExpr :: Parser Expr
 parseExpr = choose
   [ parseLitExpr
+  , parseIdentExpr
   ]
 
 parseLiteral :: Parser Literal
@@ -63,6 +64,9 @@ parseInfixExpr left = undefined
 
 parseLitExpr :: Parser Expr
 parseLitExpr = LitExpr <$> parseLiteral
+
+parseIdentExpr :: Parser Expr
+parseIdentExpr = IdentExpr <$> parseIdent
 
 finish :: Parser ()
 finish = next >>= go

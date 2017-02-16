@@ -64,3 +64,6 @@ spec = do
                                             , LetStmt (Ident "y") (LitExpr (IntLiteral 20))
                                             , ReturnStmt (LitExpr (BoolLiteral False))
                                             ]
+
+    it "identifier" $
+      synAna "foobar;" `shouldBe` Program [ ExprStmt (IdentExpr (Ident "foobar")) ]
