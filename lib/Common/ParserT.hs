@@ -103,6 +103,10 @@ many parser = do
 fail :: Monad m => [Char] -> ParserT s m a
 fail = throwError . ParserError . T.pack
 
+optional :: Monad m => ParserT s m a -> ParserT s m ()
+optional p = p $> () <|> return ()
+
+
 execParserT :: (Monad m, S.Stream s a) => ParserT s m x -> s -> m x
 execParserT parser s = do
   result <- runExceptT $ runStateT (runParserT parser) (ParserState s)
