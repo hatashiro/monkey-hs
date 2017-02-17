@@ -50,6 +50,7 @@ parseExpr :: Parser Expr
 parseExpr = choose
   [ parseLitExpr
   , parseIdentExpr
+  , parsePrefixExpr
   ]
 
 parseLiteral :: Parser Literal
@@ -60,7 +61,13 @@ parseLiteral = next >>= go
   go _ = fail "fail to parse a literal"
 
 parsePrefixExpr :: Parser Expr
-parsePrefixExpr = undefined
+parsePrefixExpr = do
+  tkn <- choose [atom Tk.Plus, atom Tk.Minus, atom Tk.Not]
+  case tkn of
+    Tk.Plus -> PrefixExpr PrefixPlus <$> parseExpr
+    Tk.Minus -> PrefixExpr PrefixMinus <$> parseExpr
+    Tk.Not -> PrefixExpr Not <$> parseExpr
+    _ -> fail "fail to parse a prefix expr"
 
 parseInfixExpr :: Parser Expr -> Parser Expr
 parseInfixExpr left = undefined

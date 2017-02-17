@@ -14,6 +14,7 @@ data Stmt = LetStmt Ident Expr
 
 data Expr = IdentExpr Ident
           | LitExpr Literal
+          | PrefixExpr Prefix Expr
           deriving (Show, Eq)
 
 data Literal = IntLiteral Integer
@@ -22,6 +23,9 @@ data Literal = IntLiteral Integer
 
 newtype Ident = Ident Text
               deriving (Show, Eq)
+
+data Prefix = PrefixPlus | PrefixMinus | Not
+            deriving (Show, Eq)
 
 newtype Node = Node Token -- empty dummy node
              deriving (Show, Eq)
