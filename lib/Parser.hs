@@ -48,10 +48,18 @@ parseExprStmt = ExprStmt <$> do
 
 parseExpr :: Parser Expr
 parseExpr = choose
-  [ parseLitExpr
+  [ parseParenExpr
+  , parseLitExpr
   , parseIdentExpr
   , parsePrefixExpr
   ]
+
+parseParenExpr :: Parser Expr
+parseParenExpr = do
+  atom Tk.LParen
+  expr <- parseExpr
+  atom Tk.RParen
+  return expr
 
 parseLiteral :: Parser Literal
 parseLiteral = next >>= go

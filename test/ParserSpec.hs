@@ -73,3 +73,8 @@ spec = do
       synAna "-foobar;" `shouldBe` Program [ ExprStmt $ PrefixExpr PrefixMinus (IdentExpr (Ident "foobar")) ]
       synAna "+10" `shouldBe` Program [ ExprStmt $ PrefixExpr PrefixPlus (LitExpr (IntLiteral 10)) ]
       synAna "!true" `shouldBe` Program [ ExprStmt $ PrefixExpr Not (LitExpr (BoolLiteral True)) ]
+
+    it "prefix expr" $ do
+      synAna "-(foobar);" `shouldBe` Program [ ExprStmt $ PrefixExpr PrefixMinus (IdentExpr (Ident "foobar")) ]
+      synAna "(+(10))" `shouldBe` Program [ ExprStmt $ PrefixExpr PrefixPlus (LitExpr (IntLiteral 10)) ]
+      synAna "(((!true)))" `shouldBe` Program [ ExprStmt $ PrefixExpr Not (LitExpr (BoolLiteral True)) ]
