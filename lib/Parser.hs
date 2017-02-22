@@ -46,13 +46,22 @@ parseExprStmt = ExprStmt <$> do
   optional $ atom Tk.SemiColon
   return expr
 
-parseExpr :: Parser Expr
-parseExpr = choose
-  [ parseParenExpr
-  , parseLitExpr
-  , parseIdentExpr
-  , parsePrefixExpr
-  ]
+infixOp :: Tk.Token -> (Precedence, Maybe Infix)
+infixOp Tk.Eq = (PEquals, Just Eq)
+infixOp Tk.NotEq = (PEquals, Just NotEq)
+infixOp Tk.LessThan = (PLessGreater, Just LessThan)
+infixOp Tk.GreaterThan = (PLessGreater, Just GreaterThan)
+infixOp Tk.Plus = (PSum, Just Plus)
+infixOp Tk.Minus = (PSum, Just Minus)
+infixOp Tk.Multiply = (PProduct, Just Multiply)
+infixOp Tk.Divide = (PProduct, Just Divide)
+infixOp _ = (PLowest, Nothing)
+
+parseAtomExpr :: Parser Expr
+parseAtomExpr = choose [ parseLitExpr
+                       , parseIdentExpr
+                       , parseParenExpr
+                       ]
 
 parseParenExpr :: Parser Expr
 parseParenExpr = do
@@ -68,17 +77,40 @@ parseLiteral = next >>= go
   go (Tk.BoolLiteral b) = return $ BoolLiteral b
   go _ = fail "fail to parse a literal"
 
+parseExpr :: Parser Expr
+parseExpr = parsePrattExpr PLowest
+
+parsePrattExpr :: Precedence -> Parser Expr
+parsePrattExpr precedence = do
+  left <- choose [ parsePrefixExpr, parseAtomExpr ]
+  go precedence left
+  where
+  go :: Precedence -> Expr -> Parser Expr
+  go precedence left = do
+    maybePeekInfixOp <- map infixOp <$> preview
+    case maybePeekInfixOp of
+      Just (peekPrecedence, _) | precedence < peekPrecedence -> do
+        left' <- parseInfixExpr left
+        go precedence left'
+      _ -> return left
+
 parsePrefixExpr :: Parser Expr
 parsePrefixExpr = do
   tkn <- choose [atom Tk.Plus, atom Tk.Minus, atom Tk.Not]
   case tkn of
-    Tk.Plus -> PrefixExpr PrefixPlus <$> parseExpr
-    Tk.Minus -> PrefixExpr PrefixMinus <$> parseExpr
-    Tk.Not -> PrefixExpr Not <$> parseExpr
+    Tk.Plus -> PrefixExpr PrefixPlus <$> parseAtomExpr
+    Tk.Minus -> PrefixExpr PrefixMinus <$> parseAtomExpr
+    Tk.Not -> PrefixExpr Not <$> parseAtomExpr
     _ -> fail "fail to parse a prefix expr"
 
-parseInfixExpr :: Parser Expr -> Parser Expr
-parseInfixExpr left = undefined
+parseInfixExpr :: Expr -> Parser Expr
+parseInfixExpr left = do
+  (precedence, maybeOp) <- infixOp <$> next
+  case maybeOp of
+    Nothing -> fail "not infix expr"
+    Just op -> do
+      right <- parsePrattExpr precedence
+      return $ InfixExpr op left right
 
 parseLitExpr :: Parser Expr
 parseLitExpr = LitExpr <$> parseLiteral

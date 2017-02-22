@@ -78,3 +78,37 @@ spec = do
       synAna "-(foobar);" `shouldBe` Program [ ExprStmt $ PrefixExpr PrefixMinus (IdentExpr (Ident "foobar")) ]
       synAna "(+(10))" `shouldBe` Program [ ExprStmt $ PrefixExpr PrefixPlus (LitExpr (IntLiteral 10)) ]
       synAna "(((!true)))" `shouldBe` Program [ ExprStmt $ PrefixExpr Not (LitExpr (BoolLiteral True)) ]
+
+    it "infix expr" $ do
+      synAna "10 + 20" `shouldBe` Program [ ExprStmt $
+                                            InfixExpr
+                                              Plus
+                                              (LitExpr (IntLiteral 10))
+                                              (LitExpr (IntLiteral 20))
+                                          ]
+      synAna "10 * 20" `shouldBe` Program [ ExprStmt $
+                                            InfixExpr
+                                              Multiply
+                                              (LitExpr (IntLiteral 10))
+                                              (LitExpr (IntLiteral 20))
+                                          ]
+
+      synAna "10 + 5 / -20 - (x + x)" `shouldBe` synAna "10 + (5 / (-20)) - (x + x)"
+      synAna "10 + 5 / -20 - (x + x)" `shouldBe` Program [ ExprStmt $
+                                            InfixExpr
+                                              Minus
+                                              (InfixExpr
+                                                Plus
+                                                (LitExpr (IntLiteral 10))
+                                                (InfixExpr
+                                                  Divide
+                                                  (LitExpr (IntLiteral 5))
+                                                  (PrefixExpr PrefixMinus (LitExpr (IntLiteral 20)))
+                                                )
+                                              )
+                                              (InfixExpr
+                                                Plus
+                                                (IdentExpr (Ident "x"))
+                                                (IdentExpr (Ident "x"))
+                                              )
+                                          ]
