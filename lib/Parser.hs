@@ -60,6 +60,7 @@ infixOp _ = (PLowest, Nothing)
 parseAtomExpr :: Parser Expr
 parseAtomExpr = choose [ parseLitExpr
                        , parseIdentExpr
+                       , parsePrefixExpr
                        , parseParenExpr
                        ]
 
@@ -82,7 +83,7 @@ parseExpr = parsePrattExpr PLowest
 
 parsePrattExpr :: Precedence -> Parser Expr
 parsePrattExpr precedence = do
-  left <- choose [ parsePrefixExpr, parseAtomExpr ]
+  left <- parseAtomExpr
   go precedence left
   where
   go :: Precedence -> Expr -> Parser Expr
