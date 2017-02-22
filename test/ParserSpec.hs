@@ -112,3 +112,17 @@ spec = do
                                                 (IdentExpr (Ident "x"))
                                               )
                                           ]
+
+    it "op precedence" $ do
+      let pTest x y = synAna x `shouldBe` synAna y
+      "!-a" `pTest` "(!(-a))"
+      "a + b + c" `pTest` "((a + b) + c)"
+      "a + b - c" `pTest` "((a + b) - c)"
+      "a * b * c" `pTest` "((a * b) * c)"
+      "a * b / c" `pTest` "((a * b) / c)"
+      "a + b / c" `pTest` "(a + (b / c))"
+      "a + b * c + d / e - f" `pTest` "(((a + (b * c)) + (d / e)) - f)"
+      "3 + 4; -5 * 5" `pTest` "(3 + 4)((-5) * 5)"
+      "5 > 4 == 3 < 4" `pTest` "((5 > 4) == (3 < 4))"
+      "5 < 4 != 3 > 4" `pTest` "((5 < 4) != (3 > 4))"
+      "3 + 4 * 5 == 3 * 1 + 4 * 5" `pTest` "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
