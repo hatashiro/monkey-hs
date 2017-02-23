@@ -46,6 +46,13 @@ parseExprStmt = ExprStmt <$> do
   optional $ atom Tk.SemiColon
   return expr
 
+parseBlockStmt :: Parser BlockStmt
+parseBlockStmt = do
+  atom Tk.LBrace
+  ss <- many parseStmt
+  atom Tk.RBrace
+  return ss
+
 infixOp :: Tk.Token -> (Precedence, Maybe Infix)
 infixOp Tk.Eq = (PEquals, Just Eq)
 infixOp Tk.NotEq = (PEquals, Just NotEq)
@@ -62,6 +69,7 @@ parseAtomExpr = choose [ parseLitExpr
                        , parseIdentExpr
                        , parsePrefixExpr
                        , parseParenExpr
+                       , parseIfExpr
                        ]
 
 parseParenExpr :: Parser Expr
@@ -118,6 +126,19 @@ parseLitExpr = LitExpr <$> parseLiteral
 
 parseIdentExpr :: Parser Expr
 parseIdentExpr = IdentExpr <$> parseIdent
+
+parseIfExpr :: Parser Expr
+parseIfExpr = do
+  atom Tk.If
+  atom Tk.LParen
+  expr <- parseExpr
+  atom Tk.RParen
+  consequence <- parseBlockStmt
+  IfExpr expr consequence <$> (
+    (do
+        atom Tk.Else
+        Just <$> parseBlockStmt
+    ) <|> return Nothing)
 
 finish :: Parser ()
 finish = next >>= go

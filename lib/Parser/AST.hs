@@ -12,10 +12,16 @@ data Stmt = LetStmt Ident Expr
           | ExprStmt Expr
           deriving (Show, Eq)
 
+type BlockStmt = [Stmt]
+
 data Expr = IdentExpr Ident
           | LitExpr Literal
           | PrefixExpr Prefix Expr
           | InfixExpr Infix Expr Expr
+          | IfExpr { cond :: Expr
+                   , consequence :: BlockStmt
+                   , alternative :: Maybe BlockStmt
+                   }
           deriving (Show, Eq)
 
 data Literal = IntLiteral Integer

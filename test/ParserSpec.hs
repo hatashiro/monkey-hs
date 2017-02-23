@@ -126,3 +126,20 @@ spec = do
       "5 > 4 == 3 < 4" `pTest` "((5 > 4) == (3 < 4))"
       "5 < 4 != 3 > 4" `pTest` "((5 < 4) != (3 > 4))"
       "3 + 4 * 5 == 3 * 1 + 4 * 5" `pTest` "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
+
+    it "if expr" $ do
+      synAna "if (x < y) { x }" `shouldBe`
+        Program
+          [ ExprStmt $ IfExpr
+              (InfixExpr LessThan (IdentExpr (Ident "x")) (IdentExpr (Ident "y")))
+              [ ExprStmt (IdentExpr (Ident "x")) ]
+              Nothing
+          ]
+
+      synAna "if (x < y) { x } else { y }" `shouldBe`
+        Program
+          [ ExprStmt $ IfExpr
+              (InfixExpr LessThan (IdentExpr (Ident "x")) (IdentExpr (Ident "y")))
+              [ ExprStmt (IdentExpr (Ident "x")) ]
+              (Just [ ExprStmt (IdentExpr (Ident "y")) ])
+          ]
