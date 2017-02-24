@@ -70,6 +70,7 @@ parseAtomExpr = choose [ parseLitExpr
                        , parsePrefixExpr
                        , parseParenExpr
                        , parseIfExpr
+                       , parseFnExpr
                        ]
 
 parseParenExpr :: Parser Expr
@@ -139,6 +140,23 @@ parseIfExpr = do
         atom Tk.Else
         Just <$> parseBlockStmt
     ) <|> return Nothing)
+
+parseFnExpr :: Parser Expr
+parseFnExpr = do
+  atom Tk.Function
+  atom Tk.LParen
+  params <- parseParams <|> return []
+  atom Tk.RParen
+  body <- parseBlockStmt
+  return $ FnExpr params body
+  where
+  parseParams :: Parser [Ident]
+  parseParams = do
+    p <- parseIdent
+    ps <- many $ do
+      atom Tk.Comma
+      parseIdent
+    return $ p : ps
 
 finish :: Parser ()
 finish = next >>= go

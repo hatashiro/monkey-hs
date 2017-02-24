@@ -34,6 +34,27 @@ let y = 20;
 return false;
 |]
 
+exFn1 :: Text
+exFn1 = [r|
+fn() {
+  return foobar + barfoo;
+}
+|]
+
+exFn2 :: Text
+exFn2 = [r|
+fn(x, y) {
+  return x + y;
+}
+|]
+
+exFn3 :: Text
+exFn3 = [r|
+fn() {
+  return fn (x, y, z, zz) { return x > y; };
+}
+|]
+
 synAna :: Text -> Program
 synAna = parse . lex
 
@@ -143,3 +164,22 @@ spec = do
               [ ExprStmt (IdentExpr (Ident "x")) ]
               (Just [ ExprStmt (IdentExpr (Ident "y")) ])
           ]
+
+    it "function expr" $ do
+      synAna exFn1 `shouldBe` Program
+        [ ExprStmt $ FnExpr []
+          [ ReturnStmt $ InfixExpr Plus (IdentExpr (Ident "foobar")) (IdentExpr (Ident "barfoo"))
+          ]
+        ]
+      synAna exFn2 `shouldBe` Program
+        [ ExprStmt $ FnExpr [Ident "x", Ident "y"]
+          [ ReturnStmt $ InfixExpr Plus (IdentExpr (Ident "x")) (IdentExpr (Ident "y"))
+          ]
+        ]
+      synAna exFn3 `shouldBe` Program
+        [ ExprStmt $ FnExpr []
+          [ ReturnStmt $ FnExpr [Ident "x", Ident "y", Ident "z", Ident "zz"]
+            [ ReturnStmt $ InfixExpr GreaterThan (IdentExpr (Ident "x")) (IdentExpr (Ident "y"))
+            ]
+          ]
+        ]

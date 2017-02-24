@@ -22,6 +22,9 @@ data Expr = IdentExpr Ident
                    , consequence :: BlockStmt
                    , alternative :: Maybe BlockStmt
                    }
+          | FnExpr { params :: [Ident]
+                   , body :: BlockStmt
+                   }
           deriving (Show, Eq)
 
 data Literal = IntLiteral Integer
