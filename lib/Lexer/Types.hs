@@ -12,5 +12,5 @@ instance Stream Text Char where
 
 type Lexer = ParserT Text Identity
 
-execLexer :: Lexer a -> Text -> a
+execLexer :: Lexer a -> Text -> Either ParserError a
 execLexer = (runIdentity .) . execParserT

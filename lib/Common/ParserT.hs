@@ -8,6 +8,7 @@ import Protolude hiding (many)
 import qualified Common.Stream as S
 import           Control.Exception (throw)
 import           Control.Monad.Trans.Class (MonadTrans(..))
+import           Data.Bifunctor (second)
 import qualified Data.Text as T
 import           Utils ((<<), returnOrThrow)
 
@@ -113,9 +114,6 @@ optional :: Monad m => ParserT s m a -> ParserT s m ()
 optional p = p $> () <|> return ()
 
 
-execParserT :: (Monad m, S.Stream s a) => ParserT s m x -> s -> m x
-execParserT parser s = do
-  result <- runExceptT $ runStateT (runParserT parser) (ParserState s)
-  case result of
-    Left e -> throw e
-    Right (a, _) -> return a
+execParserT :: (Monad m, S.Stream s a) => ParserT s m x -> s -> m (Either ParserError x)
+execParserT parser s =
+  second fst <$> (runExceptT $ runStateT (runParserT parser) (ParserState s))

@@ -178,5 +178,5 @@ finish = next >>= go
   go Tk.EOF = return ()
   go tkn = fail $ "unexpected token: " ++ show tkn
 
-parse :: [Tk.Token] -> Program
+parse :: [Tk.Token] -> Either ParserError Program
 parse = execParser (parseProgram << finish)

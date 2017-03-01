@@ -6,6 +6,7 @@ import Lexer (lex)
 import Parser (parse)
 import Parser.AST
 import Text.RawString.QQ
+import Utils (unsafeFromRight)
 
 import Test.Hspec
 
@@ -63,7 +64,7 @@ fn(a, b) { return a + b; }(1, 2);
 |]
 
 synAna :: Text -> Program
-synAna = parse . lex
+synAna = unsafeFromRight . (lex >=> parse)
 
 spec :: Spec
 spec = do

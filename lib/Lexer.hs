@@ -73,7 +73,7 @@ lexIllegal = consume $> Illegal
 skipWhitespaces :: Lexer ()
 skipWhitespaces = many (predicate $ flip elem [' ', '\t', '\n', '\r']) >> return ()
 
-lex :: Text -> [Token]
+lex :: Text -> Either ParserError [Token]
 lex = execLexer go
   where
   go :: Lexer [Token]

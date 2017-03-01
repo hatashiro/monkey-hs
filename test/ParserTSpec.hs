@@ -8,6 +8,9 @@ import Test.Hspec
 
 type Parser m = ParserT [Integer] m
 
+shouldParse p r = shouldBe p (Identity $ Right r)
+shouldFail p e = shouldBe p (Identity $ Left e)
+
 spec :: Spec
 spec = describe "ParserT" $ do
   it "execParserT" $
@@ -15,10 +18,10 @@ spec = describe "ParserT" $ do
       parser :: Parser Identity (Integer, Integer, Integer)
       parser = (,,) <$> next <*> next <*> next
     in
-      execParserT parser [1, 2, 3] `shouldBe` Identity (1, 2, 3)
+      execParserT parser [1, 2, 3] `shouldParse` (1, 2, 3)
 
   it "fail" $
-    execParserT (fail "it fails!") [] `shouldThrow` (== ParserError "it fails!")
+    execParserT (fail "it fails!" :: Parser Identity ()) [] `shouldFail` ParserError "it fails!"
 
   it "parse" $
     let
@@ -31,18 +34,20 @@ spec = describe "ParserT" $ do
         _ <- string [7, 8, 7]
         lift $ expectationFailure "should fail in the previous line"
     in do
-      execParserT parseTest [1..20] `shouldThrow` (== ParserError "fail to parse [7,8,7]")
-      execParserT (string [1, 2, 3]) [] `shouldThrow` (== ParserError "unexpected end of stream")
+      r1 <- execParserT parseTest [1..20]
+      r1 `shouldBe` Left (ParserError "fail to parse [7,8,7]")
+      r2 <- execParserT (string [1, 2, 3]) []
+      r2 `shouldBe` Left (ParserError "unexpected end of stream")
 
   it "<|>" $ do
-    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [1..6] `shouldBe` Identity [1, 2, 3]
-    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [4, 5, 6, 1, 2, 3] `shouldBe` Identity [4, 5, 6]
-    execParserT (empty <|> string [4, 5, 6]) [4, 5, 6, 1, 2, 3] `shouldBe` Identity [4, 5, 6]
-    execParserT (string [4, 5, 6] <|> empty) [4, 5, 6, 1, 2, 3] `shouldBe` Identity [4, 5, 6]
-    execParserT (string [1, 2, 3] <|> empty) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "empty")
-    execParserT (empty <|> string [1, 2, 3]) [4, 5, 6, 1, 2, 3] `shouldThrow` (== ParserError "fail to parse [1,2,3]")
-    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [10..] `shouldThrow` (== ParserError "fail to parse [4,5,6]")
-    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [] `shouldThrow` (== ParserError "unexpected end of stream")
+    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [1..6] `shouldParse` [1, 2, 3]
+    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [4, 5, 6, 1, 2, 3] `shouldParse` [4, 5, 6]
+    execParserT (empty <|> string [4, 5, 6]) [4, 5, 6, 1, 2, 3] `shouldParse` [4, 5, 6]
+    execParserT (string [4, 5, 6] <|> empty) [4, 5, 6, 1, 2, 3] `shouldParse` [4, 5, 6]
+    execParserT (string [1, 2, 3] <|> empty) [4, 5, 6, 1, 2, 3] `shouldFail` ParserError "empty"
+    execParserT (empty <|> string [1, 2, 3]) [4, 5, 6, 1, 2, 3] `shouldFail` ParserError "fail to parse [1,2,3]"
+    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [10..] `shouldFail` ParserError "fail to parse [4,5,6]"
+    execParserT (string [1, 2, 3] <|> string [4, 5, 6]) [] `shouldFail` ParserError "unexpected end of stream"
 
   it "choose" $ do
     execParserT (
@@ -51,41 +56,41 @@ spec = describe "ParserT" $ do
              , string [4, 5, 6]
              ]
       )
-      [1..] `shouldBe` Identity [1, 2, 3]
+      [1..] `shouldParse` [1, 2, 3]
     execParserT (
       choose [ string [1, 2, 3]
              , string [4, 5, 6, 7]
              , string [4, 5, 6]
              ]
       )
-      [4..] `shouldBe` Identity [4, 5, 6, 7]
+      [4..] `shouldParse` [4, 5, 6, 7]
     execParserT (
       choose [ string [1, 2, 3]
              , string [4, 5, 6, 7]
              , string [4, 5, 6]
              ]
       )
-      [4, 5, 6, 5] `shouldBe` Identity [4, 5, 6]
+      [4, 5, 6, 5] `shouldParse` [4, 5, 6]
     execParserT (
       choose [ string [1, 2, 3]
              , string [4, 5, 6, 7]
              , string [4, 5, 6]
              ]
       )
-      [5..] `shouldThrow` (== ParserError "fail to parse [4,5,6]")
+      [5..] `shouldFail` ParserError "fail to parse [4,5,6]"
     execParserT (
       choose []
-      )
-      [5..] `shouldThrow` (== ParserError "empty")
+      :: Parser Identity [Integer])
+      [5..] `shouldFail` ParserError "empty"
 
   it "predicate" $ do
-    execParserT (predicate (< 5)) [1..] `shouldBe` Identity 1
-    execParserT (predicate (< 5)) [4..] `shouldBe` Identity 4
-    execParserT (predicate (< 5)) [5..] `shouldThrow` (== ParserError "unexpected 5")
+    execParserT (predicate (< 5)) [1..] `shouldParse` 1
+    execParserT (predicate (< 5)) [4..] `shouldParse` 4
+    execParserT (predicate (< 5)) [5..] `shouldFail` ParserError "unexpected 5"
 
   it "many" $ do
     let lt5 = predicate (< 5)
-    execParserT (many lt5) [1..4] `shouldBe` Identity [1..4]
-    execParserT (many lt5) [1..] `shouldBe` Identity [1..4]
-    execParserT (many lt5) [4..] `shouldBe` Identity [4]
-    execParserT (many lt5) [5..] `shouldBe` Identity []
+    execParserT (many lt5) [1..4] `shouldParse` [1..4]
+    execParserT (many lt5) [1..] `shouldParse` [1..4]
+    execParserT (many lt5) [4..] `shouldParse` [4]
+    execParserT (many lt5) [5..] `shouldParse` []

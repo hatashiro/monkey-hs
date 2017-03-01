@@ -7,5 +7,5 @@ import Lexer.Token
 
 type Parser = ParserT [Token] Identity
 
-execParser :: Parser a -> [Token] -> a
+execParser :: Parser a -> [Token] -> Either ParserError a
 execParser = (runIdentity .) . execParserT
