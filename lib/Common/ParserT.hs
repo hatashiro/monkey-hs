@@ -100,6 +100,12 @@ many parser = do
     Just a -> (a:) <$> many parser
     Nothing -> return []
 
+many1 :: Monad m => ParserT s m a -> ParserT s m [a]
+many1 parser = do
+  x <- parser
+  xs <- many parser
+  return $ x:xs
+
 fail :: Monad m => [Char] -> ParserT s m a
 fail = throwError . ParserError . T.pack
 

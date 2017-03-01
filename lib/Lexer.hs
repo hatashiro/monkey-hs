@@ -1,7 +1,7 @@
 module Lexer where
 
 import Prelude (read)
-import Protolude hiding (one, many)
+import Protolude hiding (one, many, many1)
 
 import           Common.ParserT
 import qualified Data.Text as T
@@ -65,7 +65,7 @@ lexReservedOrIdent = do
     _ -> Ident (T.pack str)
 
 lexInteger :: Lexer Token
-lexInteger = IntLiteral . read <$> many digit
+lexInteger = IntLiteral . read <$> many1 digit
 
 lexIllegal :: Lexer Token
 lexIllegal = consume $> Illegal
