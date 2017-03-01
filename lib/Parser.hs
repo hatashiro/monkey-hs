@@ -30,14 +30,14 @@ parseLetStmt = do
   ident <- parseIdent
   atom Tk.Assign
   expr <- parseExpr
-  atom Tk.SemiColon
+  optional $ atom Tk.SemiColon
   return $ LetStmt ident expr
 
 parseReturnStmt :: Parser Stmt
 parseReturnStmt = do
   atom Tk.Return
   expr <- parseExpr
-  atom Tk.SemiColon
+  optional $ atom Tk.SemiColon
   return $ ReturnStmt expr
 
 parseExprStmt :: Parser Stmt
