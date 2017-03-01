@@ -1,11 +1,13 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module Repl where
 
 import Protolude hiding (evaluate)
 
 import Data.Text (pack)
 import Lexer (lex)
-import Lexer.Token (Token)
-import System.Console.Haskeline
+import Parser (parse)
+import Common.ParserT (ParserError)
+import System.Console.Haskeline hiding (catch)
 
 loop :: MonadIO m => m a -> m a
 loop io = io >> loop io
@@ -14,7 +16,9 @@ read :: (MonadException m, MonadIO m) => m (Maybe Text)
 read = runInputT defaultSettings $ (fmap . fmap) pack $ getInputLine "> "
 
 evaluate :: MonadIO m => Text -> m Text
-evaluate = pure . show . lex -- FIXME
+evaluate t = do
+  result <- (show . parse . lex) t `catch` \ (e :: ParserError) -> show e
+  return result
 
 rep :: (MonadException m, MonadIO m) => m ()
 rep = do
