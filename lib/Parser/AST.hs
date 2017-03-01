@@ -25,6 +25,9 @@ data Expr = IdentExpr Ident
           | FnExpr { params :: [Ident]
                    , body :: BlockStmt
                    }
+          | CallExpr { function :: Expr
+                     , arguments :: [Expr]
+                     }
           deriving (Show, Eq)
 
 data Literal = IntLiteral Integer
@@ -52,6 +55,7 @@ data Precedence = PLowest
                 | PLessGreater
                 | PSum
                 | PProduct
+                | PCall
                 deriving (Show, Eq, Ord)
 
 newtype Node = Node Token -- empty dummy node

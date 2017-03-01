@@ -55,6 +55,13 @@ fn() {
 }
 |]
 
+exCall :: Text
+exCall = [r|
+add(2, 3);
+add(a, b, 1, 2 * 3, other(4 + 5), add(6, 7 * 8));
+fn(a, b) { return a + b; }(1, 2);
+|]
+
 synAna :: Text -> Program
 synAna = parse . lex
 
@@ -143,7 +150,7 @@ spec = do
       "a * b / c" `pTest` "((a * b) / c)"
       "a + b / c" `pTest` "(a + (b / c))"
       "a + b * c + d / e - f" `pTest` "(((a + (b * c)) + (d / e)) - f)"
-      "3 + 4; -5 * 5" `pTest` "(3 + 4)((-5) * 5)"
+      "3 + 4; -5 * 5" `pTest` "(3 + 4);((-5) * 5)"
       "5 > 4 == 3 < 4" `pTest` "((5 > 4) == (3 < 4))"
       "5 < 4 != 3 > 4" `pTest` "((5 < 4) != (3 > 4))"
       "3 + 4 * 5 == 3 * 1 + 4 * 5" `pTest` "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
@@ -182,4 +189,35 @@ spec = do
             [ ReturnStmt $ InfixExpr GreaterThan (IdentExpr (Ident "x")) (IdentExpr (Ident "y"))
             ]
           ]
+        ]
+
+    it "function call expr" $ do
+      synAna exCall `shouldBe` Program
+        [ ExprStmt $ CallExpr (IdentExpr (Ident "add")) [ LitExpr (IntLiteral 2)
+                                             , LitExpr (IntLiteral 3)
+                                             ]
+        , ExprStmt $ CallExpr (IdentExpr (Ident "add")) [ IdentExpr (Ident "a")
+                                             , IdentExpr (Ident "b")
+                                             , LitExpr (IntLiteral 1)
+                                             , InfixExpr Multiply (LitExpr (IntLiteral 2))
+                                                                  (LitExpr (IntLiteral 3))
+                                             , CallExpr (IdentExpr (Ident "other"))
+                                               [ InfixExpr Plus (LitExpr (IntLiteral 4))
+                                                                (LitExpr (IntLiteral 5))
+                                               ]
+                                             , CallExpr (IdentExpr (Ident "add"))
+                                               [ LitExpr (IntLiteral 6)
+                                               , InfixExpr Multiply (LitExpr (IntLiteral 7))
+                                                                (LitExpr (IntLiteral 8))
+                                               ]
+                                             ]
+        , ExprStmt $ CallExpr (FnExpr
+                    [Ident "a", Ident "b"]
+                    [ ReturnStmt $ InfixExpr Plus (IdentExpr (Ident "a"))
+                                                  (IdentExpr (Ident "b"))
+                    ]
+                   )
+                   [ LitExpr (IntLiteral 1)
+                   , LitExpr (IntLiteral 2)
+                   ]
         ]
