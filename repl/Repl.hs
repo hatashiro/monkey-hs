@@ -16,9 +16,10 @@ read :: (MonadException m, MonadIO m) => m (Maybe Text)
 read = runInputT defaultSettings $ (fmap . fmap) pack $ getInputLine "> "
 
 evaluate :: MonadIO m => Text -> m Text
-evaluate t = do
-  result <- (show . parse . lex) t `catch` \ (e :: ParserError) -> show e
-  return result
+evaluate input = do
+  let tokens = lex input
+  let ast = parse tokens
+  return $ show ast
 
 rep :: (MonadException m, MonadIO m) => m ()
 rep = do
