@@ -2,9 +2,25 @@ module Evaluator where
 
 import Protolude
 
-import           Evaluator.Object
-import           Evaluator.Types
-import qualified Parser.AST as A
+import Data.List (last)
+import Evaluator.Object
+import Evaluator.Types
+import Parser.AST
 
-eval :: A.Program -> Either EvalError Object
-eval = undefined
+evalProgram :: Program -> Evaluator Object
+evalProgram (Program stmts) = last <$> traverse evalStmt stmts
+
+evalStmt :: Stmt -> Evaluator Object
+evalStmt (ExprStmt expr) = evalExpr expr
+evalStmt _ = undefined
+
+evalExpr :: Expr -> Evaluator Object
+evalExpr (LitExpr l) = evalLiteral l
+evalExpr _ = undefined
+
+evalLiteral :: Literal -> Evaluator Object
+evalLiteral (IntLiteral i) = return $ OInt i
+evalLiteral (BoolLiteral b) = return $ OBool b
+
+eval :: Program -> Either EvalError Object
+eval = execEvaluator . evalProgram
