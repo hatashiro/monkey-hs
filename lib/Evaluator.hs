@@ -24,15 +24,9 @@ evalLiteral (IntLiteral i) = return $ OInt i
 evalLiteral (BoolLiteral b) = return $ OBool b
 
 evalPrefix :: Prefix -> Expr -> Evaluator Object
-evalPrefix Not e = do
-  b <- evalExpr e >>= o2b
-  return $ OBool (not b)
-evalPrefix PrefixPlus e = do
-  n <- evalExpr e >>= o2n
-  return $ OInt n
-evalPrefix PrefixMinus e = do
-  n <- evalExpr e >>= o2n
-  return $ OInt (-n)
+evalPrefix Not = fmap (OBool . not) . (evalExpr >=> o2b)
+evalPrefix PrefixPlus = fmap OInt . (evalExpr >=> o2n)
+evalPrefix PrefixMinus = fmap (OInt . negate) . (evalExpr >=> o2n)
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
