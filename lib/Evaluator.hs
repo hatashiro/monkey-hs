@@ -27,12 +27,20 @@ evalPrefix :: Prefix -> Expr -> Evaluator Object
 evalPrefix Not e = do
   b <- evalExpr e >>= o2b
   return $ OBool (not b)
-evalPrefix PrefixPlus e = undefined
-evalPrefix PrefixMinus e = undefined
+evalPrefix PrefixPlus e = do
+  n <- evalExpr e >>= o2n
+  return $ OInt n
+evalPrefix PrefixMinus e = do
+  n <- evalExpr e >>= o2n
+  return $ OInt (-n)
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
 o2b o = throwError . EvalError $ show o <> " is not a bool"
+
+o2n :: Object -> Evaluator Integer
+o2n (OInt i) = return i
+o2n o = throwError . EvalError $ show o <> " is not a number"
 
 eval :: Program -> Either EvalError Object
 eval = execEvaluator . evalProgram

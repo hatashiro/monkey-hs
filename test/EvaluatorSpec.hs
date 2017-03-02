@@ -40,3 +40,15 @@ spec = do
       eval' "!0" `shouldFail` EvalError "0 is not a bool"
       eval' "!!5" `shouldFail` EvalError "5 is not a bool"
       eval' "!!0" `shouldFail` EvalError "0 is not a bool"
+      -- the prefix +
+      eval' "+1" `shouldEvalTo` OInt 1
+      eval' "+5" `shouldEvalTo` OInt 5
+      eval' "+20" `shouldEvalTo` OInt 20
+      eval' "+true" `shouldFail` EvalError "true is not a number"
+      eval' "+false" `shouldFail` EvalError "false is not a number"
+      -- the prefix -
+      eval' "-1" `shouldEvalTo` OInt (-1)
+      eval' "-5" `shouldEvalTo` OInt (-5)
+      eval' "-20" `shouldEvalTo` OInt (-20)
+      eval' "-true" `shouldFail` EvalError "true is not a number"
+      eval' "-false" `shouldFail` EvalError "false is not a number"
