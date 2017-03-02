@@ -7,7 +7,6 @@ import Protolude hiding (many)
 import qualified Common.Stream as S
 import           Control.Exception (throw)
 import           Control.Monad.Trans.Class (MonadTrans(..))
-import           Data.Bifunctor (second)
 import qualified Data.Text as T
 import           Utils ((<<), returnOrThrow)
 
