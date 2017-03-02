@@ -25,15 +25,14 @@ evalLiteral (BoolLiteral b) = return $ OBool b
 
 evalPrefix :: Prefix -> Expr -> Evaluator Object
 evalPrefix Not e = do
-  o <- evalExpr e
-  return $ OBool . not . o2b $ o
+  b <- evalExpr e >>= o2b
+  return $ OBool (not b)
 evalPrefix PrefixPlus e = undefined
 evalPrefix PrefixMinus e = undefined
 
-o2b :: Object -> Bool
-o2b (OBool b) = b
-o2b (OInt i) = i /= 0
-o2b (ONull) = False
+o2b :: Object -> Evaluator Bool
+o2b (OBool b) = return b
+o2b o = throwError . EvalError $ show o <> " is not a bool"
 
 eval :: Program -> Either EvalError Object
 eval = execEvaluator . evalProgram

@@ -33,10 +33,10 @@ spec = do
       -- !, the bang operator
       eval' "!true" `shouldEvalTo` false
       eval' "!false" `shouldEvalTo` true
-      eval' "!5" `shouldEvalTo` false
-      eval' "!1" `shouldEvalTo` false
-      eval' "!0" `shouldEvalTo` true
       eval' "!!true" `shouldEvalTo` true
       eval' "!!false" `shouldEvalTo` false
-      eval' "!!5" `shouldEvalTo` true
-      eval' "!!0" `shouldEvalTo` false
+      eval' "!5" `shouldFail` EvalError "5 is not a bool"
+      eval' "!1" `shouldFail` EvalError "1 is not a bool"
+      eval' "!0" `shouldFail` EvalError "0 is not a bool"
+      eval' "!!5" `shouldFail` EvalError "5 is not a bool"
+      eval' "!!0" `shouldFail` EvalError "0 is not a bool"
