@@ -57,6 +57,3 @@ data Precedence = PLowest
                 | PProduct
                 | PCall
                 deriving (Show, Eq, Ord)
-
-newtype Node = Node Token -- empty dummy node
-             deriving (Show, Eq)
