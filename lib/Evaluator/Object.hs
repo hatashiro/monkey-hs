@@ -12,3 +12,9 @@ instance Show Object where
   show (OInt x) = show x
   show (OBool x) = if x then "true" else "false"
   show ONull        = "null"
+
+true :: Object
+true = OBool True
+
+false :: Object
+false = OBool False
