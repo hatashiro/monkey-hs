@@ -21,7 +21,20 @@ Most importantly, writing Haskell makes me productive and happy. :sparkles:
 
 ## Instruction
 
-*Work in process*
+### Build, test and install
+
+```bash
+$ stack build
+$ stack test
+$ stack install # will install binaries in $PATH
+```
+
+### REPL
+
+```bash
+$ mkrepl
+$ stack exec mkrepl # without install
+```
 
 ## License
 
