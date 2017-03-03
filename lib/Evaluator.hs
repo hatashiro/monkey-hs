@@ -8,13 +8,20 @@ import Evaluator.Types
 import Parser.AST
 
 evalProgram :: Program -> Evaluator Object
-evalProgram (Program blockStmt) = evalBlockStmt blockStmt
+evalProgram (Program blockStmt) = returned <$> evalBlockStmt blockStmt
 
 evalBlockStmt :: BlockStmt -> Evaluator Object
-evalBlockStmt = fmap last . traverse evalStmt
+evalBlockStmt [] = return nil
+evalBlockStmt (s:[]) = evalStmt s
+evalBlockStmt (s:ss) = do
+  o <- evalStmt s
+  if isReturned o
+  then return o
+  else evalBlockStmt ss
 
 evalStmt :: Stmt -> Evaluator Object
 evalStmt (ExprStmt expr) = evalExpr expr
+evalStmt (ReturnStmt expr) = ret <$> evalExpr expr
 evalStmt _ = undefined
 
 evalExpr :: Expr -> Evaluator Object

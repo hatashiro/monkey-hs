@@ -6,6 +6,7 @@ import GHC.Show (Show(..))
 data Object = OInt Integer
             | OBool Bool
             | ONull
+            | OReturn Object
             deriving (Eq)
 
 instance Show Object where
@@ -21,3 +22,14 @@ false = OBool False
 
 nil :: Object
 nil = ONull
+
+ret :: Object -> Object
+ret o = OReturn o
+
+isReturned :: Object -> Bool
+isReturned (OReturn _) = True
+isReturned _           = False
+
+returned :: Object -> Object
+returned (OReturn o) = o
+returned o           = o

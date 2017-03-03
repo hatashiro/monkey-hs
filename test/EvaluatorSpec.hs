@@ -18,6 +18,16 @@ eval' = eval . unsafeFromRight . (lex >=> parse)
 shouldEvalTo e r = e `shouldBe` Right r
 shouldFail e l = e `shouldBe` Left l
 
+return1 :: Text
+return1 = [r|
+if (10 > 1) {
+  if (10 > 1) {
+    return 10;
+  }
+  return 1;
+}
+|]
+
 spec :: Spec
 spec = do
   describe "evaluator" $ do
@@ -89,3 +99,10 @@ spec = do
       eval' "if (1 > 2) { 10 }" `shouldEvalTo` nil
       eval' "if (1 < 2) { 10 } else { 20 }" `shouldEvalTo` OInt 10
       eval' "if (1 > 2) { 10 } else { 20 }" `shouldEvalTo` OInt 20
+
+    it "return statement" $ do
+      eval' "return 10" `shouldEvalTo` OInt 10
+      eval' "return 10; 9" `shouldEvalTo` OInt 10
+      eval' "return 2 * 5; 9" `shouldEvalTo` OInt 10
+      eval' "9; return 2 * 5; 9" `shouldEvalTo` OInt 10
+      eval' return1 `shouldEvalTo` OInt 10
