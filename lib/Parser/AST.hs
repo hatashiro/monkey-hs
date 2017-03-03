@@ -4,7 +4,7 @@ import Protolude
 
 import Lexer.Token
 
-newtype Program = Program [Stmt]
+newtype Program = Program BlockStmt
                 deriving (Show, Eq)
 
 data Stmt = LetStmt Ident Expr

@@ -18,3 +18,6 @@ true = OBool True
 
 false :: Object
 false = OBool False
+
+nil :: Object
+nil = ONull

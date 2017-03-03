@@ -80,3 +80,12 @@ spec = do
       eval' "(1 < 2) == false" `shouldEvalTo` false
       eval' "(1 > 2) == true" `shouldEvalTo` false
       eval' "(1 > 2) == false" `shouldEvalTo` true
+
+    it "conditional expr" $ do
+      eval' "if (true) { 10 }" `shouldEvalTo` OInt 10
+      eval' "if (false) { 10 }" `shouldEvalTo` nil
+      eval' "if (1) { 10 }" `shouldFail` EvalError "1 is not a bool"
+      eval' "if (1 < 2) { 10 }" `shouldEvalTo` OInt 10
+      eval' "if (1 > 2) { 10 }" `shouldEvalTo` nil
+      eval' "if (1 < 2) { 10 } else { 20 }" `shouldEvalTo` OInt 10
+      eval' "if (1 > 2) { 10 } else { 20 }" `shouldEvalTo` OInt 20

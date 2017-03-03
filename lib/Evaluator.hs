@@ -8,7 +8,10 @@ import Evaluator.Types
 import Parser.AST
 
 evalProgram :: Program -> Evaluator Object
-evalProgram (Program stmts) = last <$> traverse evalStmt stmts
+evalProgram (Program blockStmt) = evalBlockStmt blockStmt
+
+evalBlockStmt :: BlockStmt -> Evaluator Object
+evalBlockStmt = fmap last . traverse evalStmt
 
 evalStmt :: Stmt -> Evaluator Object
 evalStmt (ExprStmt expr) = evalExpr expr
@@ -18,6 +21,7 @@ evalExpr :: Expr -> Evaluator Object
 evalExpr (LitExpr l) = evalLiteral l
 evalExpr (PrefixExpr p e) = evalPrefix p e
 evalExpr (InfixExpr i l r) = evalInfix i l r
+evalExpr (IfExpr cond conse maybeAlter) = evalIf cond conse maybeAlter
 evalExpr _ = undefined
 
 evalLiteral :: Literal -> Evaluator Object
@@ -38,6 +42,15 @@ evalInfix Eq = (fmap OBool .) . ee2x (==) return
 evalInfix NotEq = (fmap OBool  .) . ee2x (/=) return
 evalInfix GreaterThan = (fmap OBool .) . ee2x (>) o2n
 evalInfix LessThan = (fmap OBool .) . ee2x (<) o2n
+
+evalIf :: Expr -> BlockStmt -> Maybe BlockStmt -> Evaluator Object
+evalIf cond conse maybeAlter = do
+  condBool <- evalExpr cond >>= o2b
+  if condBool
+  then evalBlockStmt conse
+  else case maybeAlter of
+         Just alter -> evalBlockStmt alter
+         Nothing -> return nil
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
