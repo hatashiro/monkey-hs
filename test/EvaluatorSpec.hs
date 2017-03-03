@@ -52,3 +52,31 @@ spec = do
       eval' "-20" `shouldEvalTo` OInt (-20)
       eval' "-true" `shouldFail` EvalError "true is not a number"
       eval' "-false" `shouldFail` EvalError "false is not a number"
+
+    it "infix op" $ do
+      -- algebra
+      eval' "5 + 5 + 5 + 5 - 10" `shouldEvalTo` OInt 10
+      eval' "2 * 2 * 2 * 2 * 2" `shouldEvalTo` OInt 32
+      eval' "-50 + 100 + -50" `shouldEvalTo` OInt 0
+      eval' "5 * 2 + 10" `shouldEvalTo` OInt 20
+      eval' "5 + 2 * 10" `shouldEvalTo` OInt 25
+      eval' "20 + 2 * -10" `shouldEvalTo` OInt 0
+      eval' "50 / 2 * 2 + 10" `shouldEvalTo` OInt 60
+      eval' "2 * (5 + 10)" `shouldEvalTo` OInt 30
+      eval' "3 * 3 * 3 + 10" `shouldEvalTo` OInt 37
+      eval' "3 * (3 * 3) + 10" `shouldEvalTo` OInt 37
+      eval' "(5 + 10 * 2 + 15 / 3) * 2 + -10" `shouldEvalTo` OInt 50
+      -- logical algebra
+      eval' "1 < 2" `shouldEvalTo` true
+      eval' "1 > 2" `shouldEvalTo` false
+      eval' "1 < 1" `shouldEvalTo` false
+      eval' "1 > 1" `shouldEvalTo` false
+      eval' "1 == 1" `shouldEvalTo` true
+      eval' "1 != 1" `shouldEvalTo` false
+      eval' "1 == 2" `shouldEvalTo` false
+      eval' "1 != 2" `shouldEvalTo` true
+      -- combination
+      eval' "(1 < 2) == true" `shouldEvalTo` true
+      eval' "(1 < 2) == false" `shouldEvalTo` false
+      eval' "(1 > 2) == true" `shouldEvalTo` false
+      eval' "(1 > 2) == false" `shouldEvalTo` true

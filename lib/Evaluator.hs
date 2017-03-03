@@ -17,6 +17,7 @@ evalStmt _ = undefined
 evalExpr :: Expr -> Evaluator Object
 evalExpr (LitExpr l) = evalLiteral l
 evalExpr (PrefixExpr p e) = evalPrefix p e
+evalExpr (InfixExpr i l r) = evalInfix i l r
 evalExpr _ = undefined
 
 evalLiteral :: Literal -> Evaluator Object
@@ -28,6 +29,16 @@ evalPrefix Not = fmap (OBool . not) . (evalExpr >=> o2b)
 evalPrefix PrefixPlus = fmap OInt . (evalExpr >=> o2n)
 evalPrefix PrefixMinus = fmap (OInt . negate) . (evalExpr >=> o2n)
 
+evalInfix :: Infix -> Expr -> Expr -> Evaluator Object
+evalInfix Plus = (fmap OInt .) . ee2x o2n (+)
+evalInfix Minus = (fmap OInt .) . ee2x o2n (-)
+evalInfix Multiply = (fmap OInt .) . ee2x o2n (*)
+evalInfix Divide = (fmap OInt .) . ee2x o2n div
+evalInfix Eq = (fmap OBool .) . ee2x return (==)
+evalInfix NotEq = (fmap OBool  .) . ee2x return (/=)
+evalInfix GreaterThan = (fmap OBool .) . ee2x o2n (>)
+evalInfix LessThan = (fmap OBool .) . ee2x o2n (<)
+
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
 o2b o = throwError . EvalError $ show o <> " is not a bool"
@@ -35,6 +46,12 @@ o2b o = throwError . EvalError $ show o <> " is not a bool"
 o2n :: Object -> Evaluator Integer
 o2n (OInt i) = return i
 o2n o = throwError . EvalError $ show o <> " is not a number"
+
+ee2x:: (Object -> Evaluator a) -> (a -> a -> b) -> Expr -> Expr -> Evaluator b
+ee2x trans f e1 e2 = do
+  a1 <- evalExpr e1 >>= trans
+  a2 <- evalExpr e2 >>= trans
+  return $ f a1 a2
 
 eval :: Program -> Either EvalError Object
 eval = execEvaluator . evalProgram
