@@ -30,14 +30,14 @@ evalPrefix PrefixPlus = fmap OInt . (evalExpr >=> o2n)
 evalPrefix PrefixMinus = fmap (OInt . negate) . (evalExpr >=> o2n)
 
 evalInfix :: Infix -> Expr -> Expr -> Evaluator Object
-evalInfix Plus = (fmap OInt .) . ee2x o2n (+)
-evalInfix Minus = (fmap OInt .) . ee2x o2n (-)
-evalInfix Multiply = (fmap OInt .) . ee2x o2n (*)
-evalInfix Divide = (fmap OInt .) . ee2x o2n div
-evalInfix Eq = (fmap OBool .) . ee2x return (==)
-evalInfix NotEq = (fmap OBool  .) . ee2x return (/=)
-evalInfix GreaterThan = (fmap OBool .) . ee2x o2n (>)
-evalInfix LessThan = (fmap OBool .) . ee2x o2n (<)
+evalInfix Plus = (fmap OInt .) . ee2x (+) o2n
+evalInfix Minus = (fmap OInt .) . ee2x (-) o2n
+evalInfix Multiply = (fmap OInt .) . ee2x (*) o2n
+evalInfix Divide = (fmap OInt .) . ee2x div o2n
+evalInfix Eq = (fmap OBool .) . ee2x (==) return
+evalInfix NotEq = (fmap OBool  .) . ee2x (/=) return
+evalInfix GreaterThan = (fmap OBool .) . ee2x (>) o2n
+evalInfix LessThan = (fmap OBool .) . ee2x (<) o2n
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
@@ -47,11 +47,8 @@ o2n :: Object -> Evaluator Integer
 o2n (OInt i) = return i
 o2n o = throwError . EvalError $ show o <> " is not a number"
 
-ee2x:: (Object -> Evaluator a) -> (a -> a -> b) -> Expr -> Expr -> Evaluator b
-ee2x trans f e1 e2 = do
-  a1 <- evalExpr e1 >>= trans
-  a2 <- evalExpr e2 >>= trans
-  return $ f a1 a2
+ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
+ee2x f = (liftM2 f `on`) . (evalExpr >=>)
 
 eval :: Program -> Either EvalError Object
 eval = execEvaluator . evalProgram
