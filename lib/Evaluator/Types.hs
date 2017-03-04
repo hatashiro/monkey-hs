@@ -21,10 +21,13 @@ getEnv = do
   EvalState env <- get
   return env
 
+setEnv :: Monad m => Environment -> EvaluatorT m ()
+setEnv env = put $ EvalState env
+
 updateEnv :: Monad m => (Environment -> Environment) -> EvaluatorT m ()
 updateEnv f = do
   EvalState env <- get
-  put $ EvalState (f env)
+  setEnv $ f env
 
 emptyState :: EvalState
 emptyState = EvalState emptyEnv

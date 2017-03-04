@@ -51,8 +51,8 @@ data Environment = Environment { varMap :: M.Map Ident Object
 emptyEnv :: Environment
 emptyEnv = Environment M.empty Nothing
 
-wrap :: Environment -> Environment
-wrap = Environment M.empty . Just
+wrapEnv :: Environment -> [(Ident, Object)] -> Environment
+wrapEnv = flip (Environment . M.fromList) . Just
 
 insertVar :: Ident -> Object -> Environment -> Environment
 insertVar i o (Environment m p) = Environment (M.insert i o m) p

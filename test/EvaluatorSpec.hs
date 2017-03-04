@@ -165,10 +165,22 @@ spec = do
       eval' "foobar" `shouldFail` EvalError "identifier not found: foobar"
 
     it "function def and eval" $ do
-      eval' fn1 `shouldEvalTo` OInt 10
-      eval' fn2 `shouldEvalTo` OInt 6
-      eval' fn3 `shouldEvalTo` OInt 10
-      eval' fn4 `shouldEvalTo` OInt 120
-      eval' fn5 `shouldEvalTo` OInt 9
-      eval' fn6 `shouldEvalTo` OInt 5
-      eval' fn7 `shouldEvalTo` OInt 4
+      eval' "let identity = fn(x) { x; }; identity(5);" `shouldEvalTo` OInt 5
+      eval' "let identity = fn(x) { return x; }; identity(5);" `shouldEvalTo` OInt 5
+      eval' "let double = fn(x) { x * 2; }; double(5);" `shouldEvalTo` OInt 10
+      eval' "let add = fn(x, y) { x + y; }; add(5, 5);" `shouldEvalTo` OInt 10
+      eval' "let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));" `shouldEvalTo` OInt 20
+      eval' "fn(x) { x; }(5)" `shouldEvalTo` OInt 5
+      eval' "5();" `shouldFail` EvalError "5 is not a function"
+      eval' "false();" `shouldFail` EvalError "false is not a function"
+      eval' "let add = fn(x, y) { x + y; }; add(1);" `shouldFail` EvalError "wrong number of arguments: 2 expected but 1 given"
+      -- eval' fn1 `shouldEvalTo` OInt 10
+      -- eval' fn2 `shouldEvalTo` OInt 6
+      -- eval' fn3 `shouldEvalTo` OInt 10
+      -- eval' fn4 `shouldEvalTo` OInt 120
+      -- eval' fn5 `shouldEvalTo` OInt 9
+      -- eval' fn6 `shouldEvalTo` OInt 5
+      -- eval' fn7 `shouldEvalTo` OInt 4
+      -- special cases
+      -- eval' "let a = 10; let x = fn () { a; }; x();" `shouldEvalTo` OInt 10
+      -- eval' "let x = fn () { a; }; let a = 10; x();" `shouldEvalTo` OInt 10

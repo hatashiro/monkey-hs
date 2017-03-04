@@ -39,7 +39,8 @@ evalExpr (LitExpr l) = evalLiteral l
 evalExpr (PrefixExpr p e) = evalPrefix p e
 evalExpr (InfixExpr i l r) = evalInfix i l r
 evalExpr (IfExpr cond conse maybeAlter) = evalIf cond conse maybeAlter
-evalExpr _ = undefined
+evalExpr (FnExpr params body) = evalFn params body
+evalExpr (CallExpr fn args) = evalCall fn args
 
 evalIdent :: Ident -> Evaluator Object
 evalIdent i = do
@@ -76,6 +77,26 @@ evalIf cond conse maybeAlter = do
          Just alter -> evalBlockStmt alter
          Nothing -> return nil
 
+evalFn :: [Ident] -> BlockStmt -> Evaluator Object
+evalFn params body = do
+  env <- getEnv
+  return $ OFn params body env
+
+evalCall :: Expr -> [Expr] -> Evaluator Object
+evalCall fnExpr argExprs = do
+  OFn params body fEnv <- evalExpr fnExpr >>= o2f
+  args <- traverse evalExpr argExprs
+  if length params /= length args
+  then evalError $ "wrong number of arguments: "
+                   <> show (length params) <> " expected but "
+                   <> show (length args) <> " given"
+  else do
+    origEnv <- getEnv
+    setEnv $ wrapEnv fEnv $ zip params args
+    o <- evalBlockStmt body
+    setEnv origEnv
+    return o
+
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
 o2b o = evalError $ show o <> " is not a bool"
@@ -83,6 +104,10 @@ o2b o = evalError $ show o <> " is not a bool"
 o2n :: Object -> Evaluator Integer
 o2n (OInt i) = return i
 o2n o = evalError $ show o <> " is not a number"
+
+o2f :: Object -> Evaluator Object
+o2f o@(OFn _ _ _) = return o
+o2f o = evalError $ show o <> " is not a function"
 
 ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
 ee2x f = (liftM2 f `on`) . (evalExpr >=>)
