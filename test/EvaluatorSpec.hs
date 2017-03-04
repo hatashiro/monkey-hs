@@ -184,3 +184,10 @@ spec = do
       -- special cases
       eval' "let a = 10; let x = fn () { a; }; x();" `shouldEvalTo` OInt 10
       eval' "let x = fn () { a; }; let a = 10; x();" `shouldEvalTo` OInt 10
+
+    it "string" $ do
+      eval' [r|"foobar"|] `shouldEvalTo` OString "foobar"
+      eval' [r|"foo bar"|] `shouldEvalTo` OString "foo bar"
+      eval' [r|"foo\nbar"|] `shouldEvalTo` OString "foo\nbar"
+      eval' [r|"foo\tbar"|] `shouldEvalTo` OString "foo\tbar"
+      eval' [r|"foo\"bar"|] `shouldEvalTo` OString "foo\"bar"

@@ -9,6 +9,7 @@ import           Parser.AST
 
 data Object = OInt Integer
             | OBool Bool
+            | OString Text
             | ONull
             | OFn { params :: [Ident]
                   , body :: BlockStmt
@@ -20,6 +21,7 @@ data Object = OInt Integer
 instance Show Object where
   show (OInt x) = show x
   show (OBool x) = if x then "true" else "false"
+  show (OString x) = show x
   show ONull = "null"
   show (OFn _ _ _) = "[function]"
   show (OReturn o) = show o

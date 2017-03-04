@@ -8,6 +8,7 @@ data Token = Illegal
            | Ident Text
            | IntLiteral Integer
            | BoolLiteral Bool
+           | StringLiteral Text
            -- statements
            | Assign
            | If

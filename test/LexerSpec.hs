@@ -152,3 +152,10 @@ spec = do
                                                 , Ident "hel301oo120"
                                                 , EOF
                                                 ]
+
+    it "string literals" $ do
+      lex [r|"foobar"|] `shouldBe` Right [ StringLiteral "foobar" ]
+      lex [r|"foo bar"|] `shouldBe` Right [ StringLiteral "foo bar" ]
+      lex [r|"foo\nbar"|] `shouldBe` Right [ StringLiteral "foo\nbar" ]
+      lex [r|"foo\tbar"|] `shouldBe` Right [ StringLiteral "foo\tbar" ]
+      lex [r|"foo\"bar"|] `shouldBe` Right [ StringLiteral "foo\"bar" ]

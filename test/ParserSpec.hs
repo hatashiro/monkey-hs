@@ -222,3 +222,10 @@ spec = do
                    , LitExpr (IntLiteral 2)
                    ]
         ]
+
+    it "string" $ do
+      synAna [r|"foobar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foobar" ]
+      synAna [r|"foo bar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo bar" ]
+      synAna [r|"foo\nbar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo\nbar" ]
+      synAna [r|"foo\tbar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo\tbar" ]
+      synAna [r|"foo\"bar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo\"bar" ]
