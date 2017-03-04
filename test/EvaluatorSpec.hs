@@ -191,3 +191,6 @@ spec = do
       eval' [r|"foo\nbar"|] `shouldEvalTo` OString "foo\nbar"
       eval' [r|"foo\tbar"|] `shouldEvalTo` OString "foo\tbar"
       eval' [r|"foo\"bar"|] `shouldEvalTo` OString "foo\"bar"
+      eval' [r|"foo" + "bar"|] `shouldEvalTo` OString "foobar"
+      eval' [r|"foo" + " " + "bar"|] `shouldEvalTo` OString "foo bar"
+      eval' [r|"foo" - "bar"|] `shouldFail` EvalError "\"foo\" is not a number"
