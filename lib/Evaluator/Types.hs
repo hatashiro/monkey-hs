@@ -14,23 +14,18 @@ newtype EvalError = EvalError Text
 
 instance Exception EvalError
 
-newtype EvalState = EvalState Environment
+newtype EvalState = EvalState EnvRef
 
-getEnv :: Monad m => EvaluatorT m Environment
-getEnv = do
-  EvalState env <- get
-  return env
+getEnvRef :: Monad m => EvaluatorT m EnvRef
+getEnvRef = do
+  EvalState ref <- get
+  return ref
 
-setEnv :: Monad m => Environment -> EvaluatorT m ()
-setEnv env = put $ EvalState env
+setEnvRef :: Monad m => EnvRef -> EvaluatorT m ()
+setEnvRef ref = put $ EvalState ref
 
-updateEnv :: Monad m => (Environment -> Environment) -> EvaluatorT m ()
-updateEnv f = do
-  EvalState env <- get
-  setEnv $ f env
-
-emptyState :: EvalState
-emptyState = EvalState emptyEnv
+createEmptyState :: IO EvalState
+createEmptyState = EvalState <$> emptyEnv
 
 newtype EvaluatorT m a = EvaluatorT
   { runEvaluatorT :: StateT EvalState (ExceptT EvalError m) a }
@@ -56,10 +51,7 @@ instance Monad m => MonadError EvalError (EvaluatorT m) where
 instance MonadTrans EvaluatorT where
   lift = EvaluatorT . lift . lift
 
-type Evaluator = EvaluatorT Identity
+type Evaluator = EvaluatorT IO
 
 execEvaluatorT :: Monad m => EvaluatorT m a -> EvalState -> m (Either EvalError (a, EvalState))
 execEvaluatorT = (runExceptT .) . runStateT . runEvaluatorT
-
-execEvaluator :: Evaluator a -> EvalState -> Either EvalError (a, EvalState)
-execEvaluator = (runIdentity .) . execEvaluatorT

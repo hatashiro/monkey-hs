@@ -27,7 +27,8 @@ evalStmt (LetStmt ident expr) = evalExpr expr >>= registerIdent ident
 
 registerIdent :: Ident -> Object -> Evaluator Object
 registerIdent ident o = do
-  updateEnv $ insertVar ident o
+  ref <- getEnvRef
+  lift $ insertVar ident o ref
   return o
 
 evalError :: Text -> Evaluator a
@@ -44,8 +45,9 @@ evalExpr (CallExpr fn args) = evalCall fn args
 
 evalIdent :: Ident -> Evaluator Object
 evalIdent i = do
-  env <- getEnv
-  case getVar i env of
+  env <- getEnvRef
+  var <- lift $ getVar i env
+  case var of
     Just o -> return o
     Nothing -> evalError $ "identifier not found: " <> show i
 
@@ -79,22 +81,22 @@ evalIf cond conse maybeAlter = do
 
 evalFn :: [Ident] -> BlockStmt -> Evaluator Object
 evalFn params body = do
-  env <- getEnv
-  return $ OFn params body env
+  ref <- getEnvRef
+  return $ OFn params body ref
 
 evalCall :: Expr -> [Expr] -> Evaluator Object
 evalCall fnExpr argExprs = do
-  OFn params body fEnv <- evalExpr fnExpr >>= o2f
+  OFn params body fRef <- evalExpr fnExpr >>= o2f
   args <- traverse evalExpr argExprs
   if length params /= length args
   then evalError $ "wrong number of arguments: "
                    <> show (length params) <> " expected but "
                    <> show (length args) <> " given"
   else do
-    origEnv <- getEnv
-    setEnv $ wrapEnv fEnv $ zip params args
+    origRef <- getEnvRef
+    lift (wrapEnv fRef $ zip params args) >>= setEnvRef
     o <- evalBlockStmt body
-    setEnv origEnv
+    setEnvRef origRef
     return o
 
 o2b :: Object -> Evaluator Bool
@@ -112,8 +114,10 @@ o2f o = evalError $ show o <> " is not a function"
 ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
 ee2x f = (liftM2 f `on`) . (evalExpr >=>)
 
-eval :: Program -> Either EvalError Object
-eval = fmap fst <$> flip execEvaluator emptyState . evalProgram
+eval :: Program -> IO (Either EvalError Object)
+eval p = do
+  s <- createEmptyState
+  fmap fst <$> evalWithState p s
 
-evalWithState :: Program -> EvalState -> Either EvalError (Object, EvalState)
-evalWithState = execEvaluator . evalProgram
+evalWithState :: Program -> EvalState -> IO (Either EvalError (Object, EvalState))
+evalWithState p s = execEvaluatorT (evalProgram p) s

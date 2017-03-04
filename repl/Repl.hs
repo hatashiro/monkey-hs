@@ -7,7 +7,7 @@ import qualified Data.Text as T
 import           Lexer (lex)
 import           Parser (parse)
 import           Evaluator (evalWithState)
-import           Evaluator.Types (EvalError, EvalState, emptyState)
+import           Evaluator.Types (EvalError, EvalState, createEmptyState)
 import           Evaluator.Object (Object)
 import           Common.ParserT (ParserError)
 import           System.Console.Haskeline
@@ -25,17 +25,20 @@ instance G.Show InterpretError where
   show (P p) = show p
   show (E p) = show p
 
-evaluate :: EvalState -> Text -> Either InterpretError (Object, EvalState)
+evaluate :: EvalState -> Text -> IO (Either InterpretError (Object, EvalState))
 evaluate state input = do
-  ast <- first P $ lex input >>= parse
-  first E $ evalWithState ast state
+  let result = lex input >>= parse
+  case result of
+    Right ast -> first E <$> evalWithState ast state
+    Left err -> return $ Left (P err)
 
 rep :: EvalState -> IO EvalState
 rep state = do
   maybeText <- read
   case maybeText of
-    Just text | not $ T.null text ->
-      case evaluate state text of
+    Just text | not $ T.null text -> do
+      result <- evaluate state text
+      case result of
         Left err -> do
           putStrLn (show err :: Text)
           return state
@@ -45,4 +48,4 @@ rep state = do
     _ -> return state
 
 repl :: IO ()
-repl = loop rep emptyState $> ()
+repl = (createEmptyState >>= loop rep) $> ()
