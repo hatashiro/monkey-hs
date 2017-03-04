@@ -21,7 +21,7 @@ instance Show Object where
   show (OInt x) = show x
   show (OBool x) = if x then "true" else "false"
   show ONull = "null"
-  show (OFn _ _ _) = "a function expression"
+  show (OFn _ _ _) = "[function]"
   show (OReturn o) = show o
 
 true :: Object
