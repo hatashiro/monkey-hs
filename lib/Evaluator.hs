@@ -95,7 +95,7 @@ evalCall fnExpr argExprs = do
   else do
     origRef <- getEnvRef
     lift (wrapEnv fRef $ zip params args) >>= setEnvRef
-    o <- evalBlockStmt body
+    o <- returned <$> evalBlockStmt body
     setEnvRef origRef
     return o
 
