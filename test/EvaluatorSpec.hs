@@ -106,3 +106,10 @@ spec = do
       eval' "return 2 * 5; 9" `shouldEvalTo` OInt 10
       eval' "9; return 2 * 5; 9" `shouldEvalTo` OInt 10
       eval' return1 `shouldEvalTo` OInt 10
+
+    it "bindings (let & ident)" $ do
+      eval' "let a = 5; a;" `shouldEvalTo` OInt 5
+      eval' "let a = 5 * 5; a;" `shouldEvalTo` OInt 25
+      eval' "let a = 5; let b = a; b;" `shouldEvalTo` OInt 5
+      eval' "let a = 5; let b = a; let c = a + b + 5; c;" `shouldEvalTo` OInt 15
+      eval' "foobar" `shouldFail` EvalError "identifier not found: foobar"

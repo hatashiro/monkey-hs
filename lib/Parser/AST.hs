@@ -2,7 +2,7 @@ module Parser.AST where
 
 import Protolude
 
-import Lexer.Token
+import qualified GHC.Show as G
 
 newtype Program = Program BlockStmt
                 deriving (Show, Eq)
@@ -35,7 +35,10 @@ data Literal = IntLiteral Integer
              deriving (Show, Eq)
 
 newtype Ident = Ident Text
-              deriving (Show, Eq)
+              deriving (Eq, Ord)
+
+instance G.Show Ident where
+  show (Ident t) = toS t
 
 data Prefix = PrefixPlus | PrefixMinus | Not
             deriving (Show, Eq)

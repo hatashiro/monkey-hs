@@ -28,6 +28,7 @@ library
                      , protolude
                      , text
                      , transformers
+                     , containers
   hs-source-dirs:      lib
   default-language:    Haskell2010
   default-extensions:  OverloadedStrings

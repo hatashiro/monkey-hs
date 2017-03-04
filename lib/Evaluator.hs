@@ -2,10 +2,11 @@ module Evaluator where
 
 import Protolude
 
-import Data.List (last)
-import Evaluator.Object
-import Evaluator.Types
-import Parser.AST
+import           Data.List (last)
+import qualified Data.Map.Strict as M
+import           Evaluator.Object
+import           Evaluator.Types
+import           Parser.AST
 
 evalProgram :: Program -> Evaluator Object
 evalProgram (Program blockStmt) = returned <$> evalBlockStmt blockStmt
@@ -22,14 +23,30 @@ evalBlockStmt (s:ss) = do
 evalStmt :: Stmt -> Evaluator Object
 evalStmt (ExprStmt expr) = evalExpr expr
 evalStmt (ReturnStmt expr) = ret <$> evalExpr expr
-evalStmt _ = undefined
+evalStmt (LetStmt ident expr) = evalExpr expr >>= registerIdent ident
+
+registerIdent :: Ident -> Object -> Evaluator Object
+registerIdent ident o = do
+  updateEnv $ M.insert ident o
+  return o
+
+evalError :: Text -> Evaluator a
+evalError = throwError . EvalError
 
 evalExpr :: Expr -> Evaluator Object
+evalExpr (IdentExpr i) = evalIdent i
 evalExpr (LitExpr l) = evalLiteral l
 evalExpr (PrefixExpr p e) = evalPrefix p e
 evalExpr (InfixExpr i l r) = evalInfix i l r
 evalExpr (IfExpr cond conse maybeAlter) = evalIf cond conse maybeAlter
 evalExpr _ = undefined
+
+evalIdent :: Ident -> Evaluator Object
+evalIdent i = do
+  env <- getEnv
+  case M.lookup i env of
+    Just o -> return o
+    Nothing -> evalError $ "identifier not found: " <> show i
 
 evalLiteral :: Literal -> Evaluator Object
 evalLiteral (IntLiteral i) = return $ OInt i
@@ -61,11 +78,11 @@ evalIf cond conse maybeAlter = do
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
-o2b o = throwError . EvalError $ show o <> " is not a bool"
+o2b o = evalError $ show o <> " is not a bool"
 
 o2n :: Object -> Evaluator Integer
 o2n (OInt i) = return i
-o2n o = throwError . EvalError $ show o <> " is not a number"
+o2n o = evalError $ show o <> " is not a number"
 
 ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
 ee2x f = (liftM2 f `on`) . (evalExpr >=>)

@@ -3,7 +3,11 @@
 module Evaluator.Types where
 
 import Protolude
-import Utils (type (~>))
+
+import qualified Data.Map.Strict as M
+import           Evaluator.Object (Object)
+import           Parser.AST (Ident)
+import           Utils (type (~>))
 
 import Control.Monad.Trans.Class (MonadTrans(..))
 
@@ -12,10 +16,22 @@ newtype EvalError = EvalError Text
 
 instance Exception EvalError
 
-newtype EvalState = EvalState () -- FIXME
+newtype EvalState = EvalState Environment
+
+type Environment = M.Map Ident Object
+
+getEnv :: Monad m => EvaluatorT m Environment
+getEnv = do
+  EvalState env <- get
+  return env
+
+updateEnv :: Monad m => (Environment -> Environment) -> EvaluatorT m ()
+updateEnv f = do
+  EvalState env <- get
+  put $ EvalState (f env)
 
 emptyState :: EvalState
-emptyState = EvalState () -- FIXME
+emptyState = EvalState M.empty
 
 newtype EvaluatorT m a = EvaluatorT
   { runEvaluatorT :: StateT EvalState (ExceptT EvalError m) a }
