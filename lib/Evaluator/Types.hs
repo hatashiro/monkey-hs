@@ -5,7 +5,7 @@ module Evaluator.Types where
 import Protolude
 
 import qualified Data.Map.Strict as M
-import           Evaluator.Object (Object)
+import           Evaluator.Object (Object, Environment)
 import           Parser.AST (Ident)
 
 import Control.Monad.Trans.Class (MonadTrans(..))
@@ -16,8 +16,6 @@ newtype EvalError = EvalError Text
 instance Exception EvalError
 
 newtype EvalState = EvalState Environment
-
-type Environment = M.Map Ident Object
 
 getEnv :: Monad m => EvaluatorT m Environment
 getEnv = do

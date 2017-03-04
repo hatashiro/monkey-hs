@@ -1,11 +1,18 @@
 module Evaluator.Object where
 
 import Protolude hiding (Show, show)
-import GHC.Show (Show(..))
+
+import qualified Data.Map.Strict as M
+import           GHC.Show (Show(..))
+import           Parser.AST
 
 data Object = OInt Integer
             | OBool Bool
             | ONull
+            | OFn { params :: [Ident]
+                  , body :: BlockStmt
+                  , env :: Environment
+                  }
             | OReturn Object
             deriving (Eq)
 
@@ -33,3 +40,5 @@ isReturned _           = False
 returned :: Object -> Object
 returned (OReturn o) = o
 returned o           = o
+
+type Environment = M.Map Ident Object
