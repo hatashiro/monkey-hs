@@ -4,9 +4,8 @@ module Evaluator.Types where
 
 import Protolude
 
-import qualified Data.Map.Strict as M
-import           Evaluator.Object (Object, Environment)
-import           Parser.AST (Ident)
+import Evaluator.Object
+import Parser.AST (Ident)
 
 import Control.Monad.Trans.Class (MonadTrans(..))
 
@@ -28,7 +27,7 @@ updateEnv f = do
   put $ EvalState (f env)
 
 emptyState :: EvalState
-emptyState = EvalState M.empty
+emptyState = EvalState emptyEnv
 
 newtype EvaluatorT m a = EvaluatorT
   { runEvaluatorT :: StateT EvalState (ExceptT EvalError m) a }

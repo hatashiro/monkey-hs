@@ -27,7 +27,7 @@ evalStmt (LetStmt ident expr) = evalExpr expr >>= registerIdent ident
 
 registerIdent :: Ident -> Object -> Evaluator Object
 registerIdent ident o = do
-  updateEnv $ M.insert ident o
+  updateEnv $ insertVar ident o
   return o
 
 evalError :: Text -> Evaluator a
@@ -44,7 +44,7 @@ evalExpr _ = undefined
 evalIdent :: Ident -> Evaluator Object
 evalIdent i = do
   env <- getEnv
-  case M.lookup i env of
+  case getVar i env of
     Just o -> return o
     Nothing -> evalError $ "identifier not found: " <> show i
 

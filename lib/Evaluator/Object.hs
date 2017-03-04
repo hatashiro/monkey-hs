@@ -41,4 +41,22 @@ returned :: Object -> Object
 returned (OReturn o) = o
 returned o           = o
 
-type Environment = M.Map Ident Object
+data Environment = Environment { varMap :: M.Map Ident Object
+                               , parent :: Maybe Environment
+                               }
+                 deriving (Eq)
+
+emptyEnv :: Environment
+emptyEnv = Environment M.empty Nothing
+
+wrap :: Environment -> Environment
+wrap = Environment M.empty . Just
+
+insertVar :: Ident -> Object -> Environment -> Environment
+insertVar i o (Environment m p) = Environment (M.insert i o m) p
+
+getVar :: Ident -> Environment -> Maybe Object
+getVar i (Environment m p) =
+  case M.lookup i m of
+    Just o -> Just o
+    Nothing -> p >>= getVar i
