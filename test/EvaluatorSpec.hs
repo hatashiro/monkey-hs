@@ -28,6 +28,56 @@ if (10 > 1) {
 }
 |]
 
+fn1 :: Text
+fn1 = [r|
+let add = fn(a, b, c, d) { return a + b + c + d; };
+add(1, 2, 3, 4);
+|]
+
+fn2 :: Text
+fn2 = [r|
+let addThree = fn(x) { return x + 3 };
+addThree(3);
+|]
+
+fn3 :: Text
+fn3 = [r|
+let max = fn(x, y) { if (x > y) { x } else { y } };
+max(5, 10)
+|]
+
+fn4 :: Text
+fn4 = [r|
+let factorial = fn(n) {
+  if (n == 0) {
+    1
+  } else {
+    n * factorial(n - 1)
+  }
+}
+factorial(5)
+|]
+
+fn5 :: Text
+fn5 = [r|
+let addThree = fn(x) { return x + 3 };
+let callTwoTimes = fn(x, f) { f(f(x)) }
+callTwoTimes(3, addThree);
+|]
+
+fn6 :: Text
+fn6 = [r|
+let callTwoTimes = fn(x, f) { f(f(x)) }
+callTwoTimes(3, fn(x) { x + 1 });
+|]
+
+fn7 :: Text
+fn7 = [r|
+let newAdder = fn(x) { fn(n) { x + n } };
+let addTwo = newAdder(2);
+addTwo(2);
+|]
+
 spec :: Spec
 spec = do
   describe "evaluator" $ do
@@ -113,3 +163,12 @@ spec = do
       eval' "let a = 5; let b = a; b;" `shouldEvalTo` OInt 5
       eval' "let a = 5; let b = a; let c = a + b + 5; c;" `shouldEvalTo` OInt 15
       eval' "foobar" `shouldFail` EvalError "identifier not found: foobar"
+
+    it "function def and eval" $ do
+      eval' fn1 `shouldEvalTo` OInt 10
+      eval' fn2 `shouldEvalTo` OInt 6
+      eval' fn3 `shouldEvalTo` OInt 10
+      eval' fn4 `shouldEvalTo` OInt 120
+      eval' fn5 `shouldEvalTo` OInt 9
+      eval' fn6 `shouldEvalTo` OInt 5
+      eval' fn7 `shouldEvalTo` OInt 4
