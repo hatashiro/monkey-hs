@@ -19,7 +19,9 @@ data Object = OInt Integer
 instance Show Object where
   show (OInt x) = show x
   show (OBool x) = if x then "true" else "false"
-  show ONull        = "null"
+  show ONull = "null"
+  show (OFn _ _ _) = "a function expression"
+  show (OReturn o) = show o
 
 true :: Object
 true = OBool True
