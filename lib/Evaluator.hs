@@ -88,4 +88,7 @@ ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
 ee2x f = (liftM2 f `on`) . (evalExpr >=>)
 
 eval :: Program -> Either EvalError Object
-eval = execEvaluator . evalProgram
+eval = fmap fst <$> flip execEvaluator emptyState . evalProgram
+
+evalWithState :: Program -> EvalState -> Either EvalError (Object, EvalState)
+evalWithState = execEvaluator . evalProgram

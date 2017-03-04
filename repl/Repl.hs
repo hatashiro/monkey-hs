@@ -3,21 +3,21 @@ module Repl where
 
 import Protolude hiding (evaluate)
 
-import           Data.Text (pack)
+import qualified Data.Text as T
 import           Lexer (lex)
 import           Parser (parse)
-import           Evaluator (eval)
-import           Evaluator.Types (EvalError)
+import           Evaluator (evalWithState)
+import           Evaluator.Types (EvalError, EvalState, emptyState)
 import           Evaluator.Object (Object)
 import           Common.ParserT (ParserError)
 import           System.Console.Haskeline
 import qualified GHC.Show as G
 
-loop :: IO a -> IO a
-loop io = io >> loop io
+loop :: (a -> IO a) -> a -> IO a
+loop io a = io a >>= loop io
 
 read :: IO (Maybe Text)
-read = runInputT defaultSettings $ (fmap . fmap) pack $ getInputLine "> "
+read = runInputT defaultSettings $ (fmap . fmap) toS $ getInputLine "> "
 
 data InterpretError = P ParserError | E EvalError
 
@@ -25,22 +25,24 @@ instance G.Show InterpretError where
   show (P p) = show p
   show (E p) = show p
 
-evaluate :: Text -> Either InterpretError Object
-evaluate input = do
+evaluate :: EvalState -> Text -> Either InterpretError (Object, EvalState)
+evaluate state input = do
   ast <- first P $ lex input >>= parse
-  first E $ eval ast
+  first E $ evalWithState ast state
 
-rep :: IO ()
-rep = do
+rep :: EvalState -> IO EvalState
+rep state = do
   maybeText <- read
   case maybeText of
-    Just "" -> return ()
-    Nothing -> return ()
-    Just text -> do
-      let result = evaluate text
-      putStrLn $ case result of
-        Left err -> (show err :: Text)
-        Right object -> show object
+    Just text | not $ T.null text ->
+      case evaluate state text of
+        Left err -> do
+          putStrLn (show err :: Text)
+          return state
+        Right (object, state') -> do
+          putStrLn $ (show object :: Text)
+          return state'
+    _ -> return state
 
 repl :: IO ()
-repl = loop rep
+repl = loop rep emptyState $> ()

@@ -7,7 +7,6 @@ import Protolude
 import qualified Data.Map.Strict as M
 import           Evaluator.Object (Object)
 import           Parser.AST (Ident)
-import           Utils (type (~>))
 
 import Control.Monad.Trans.Class (MonadTrans(..))
 
@@ -59,9 +58,8 @@ instance MonadTrans EvaluatorT where
 
 type Evaluator = EvaluatorT Identity
 
-execEvaluatorT :: Monad m => EvaluatorT m a -> m (Either EvalError a)
-execEvaluatorT =
-  fmap (second fst) . runExceptT . flip runStateT emptyState . runEvaluatorT
+execEvaluatorT :: Monad m => EvaluatorT m a -> EvalState -> m (Either EvalError (a, EvalState))
+execEvaluatorT = (runExceptT .) . runStateT . runEvaluatorT
 
-execEvaluator :: Evaluator ~> Either EvalError
-execEvaluator = runIdentity . execEvaluatorT
+execEvaluator :: Evaluator a -> EvalState -> Either EvalError (a, EvalState)
+execEvaluator = (runIdentity .) . execEvaluatorT
