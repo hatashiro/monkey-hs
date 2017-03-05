@@ -29,6 +29,7 @@ data Expr = IdentExpr Ident
                      , arguments :: [Expr]
                      }
           | ArrayExpr [Expr]
+          | HashExpr [(Literal, Expr)]
           | IndexExpr { array :: Expr
                       , index :: Expr
                       }
@@ -37,7 +38,7 @@ data Expr = IdentExpr Ident
 data Literal = IntLiteral Integer
              | BoolLiteral Bool
              | StringLiteral Text
-             deriving (Show, Eq)
+             deriving (Show, Eq, Ord)
 
 newtype Ident = Ident Text
               deriving (Eq, Ord)

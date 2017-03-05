@@ -247,3 +247,33 @@ spec = do
       let pTest x y = synAna x `shouldBe` synAna y
       "a * [1, 2, 3, 4][b * c] * d" `pTest` "((a * ([1, 2, 3, 4][b * c])) * d)"
       "add(a * b[2], b[1], 2 * [1, 2][1])" `pTest` "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"
+
+    it "hash" $ do
+      synAna "{}" `shouldBe` Program [ ExprStmt $ HashExpr [] ]
+      synAna "{\"one\": 1, \"two\": 2, \"three\": 3}" `shouldBe`
+        Program [ ExprStmt $
+                  HashExpr [ (StringLiteral "one", LitExpr $ IntLiteral 1)
+                           , (StringLiteral "two", LitExpr $ IntLiteral 2)
+                           , (StringLiteral "three", LitExpr $ IntLiteral 3)
+                           ]
+                ]
+      synAna "{4: 1, 5: 2, 6: 3}" `shouldBe`
+        Program [ ExprStmt $
+                  HashExpr [ (IntLiteral 4, LitExpr $ IntLiteral 1)
+                           , (IntLiteral 5, LitExpr $ IntLiteral 2)
+                           , (IntLiteral 6, LitExpr $ IntLiteral 3)
+                           ]
+                ]
+      synAna "{true: 1, false: 2}" `shouldBe`
+        Program [ ExprStmt $
+                  HashExpr [ (BoolLiteral True, LitExpr $ IntLiteral 1)
+                           , (BoolLiteral False, LitExpr $ IntLiteral 2)
+                           ]
+                ]
+      synAna "{\"one\": 0 + 1, \"two\": 10 - 8, \"three\": 15/5}" `shouldBe`
+        Program [ ExprStmt $
+                  HashExpr [ (StringLiteral "one", InfixExpr Plus (LitExpr $ IntLiteral 0) (LitExpr $ IntLiteral 1))
+                           , (StringLiteral "two", InfixExpr Minus (LitExpr $ IntLiteral 10) (LitExpr $ IntLiteral 8))
+                           , (StringLiteral "three", InfixExpr Divide (LitExpr $ IntLiteral 15) (LitExpr $ IntLiteral 5))
+                           ]
+                ]

@@ -38,7 +38,8 @@ lexOperator = choose
 
 lexPunctuation :: Lexer Token
 lexPunctuation = choose
-  [ parseMap ";" SemiColon
+  [ parseMap ":" Colon
+  , parseMap ";" SemiColon
   , parseMap "," Comma
   , parseMap "(" LParen
   , parseMap ")" RParen

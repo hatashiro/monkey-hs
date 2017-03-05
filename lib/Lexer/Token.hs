@@ -29,6 +29,7 @@ data Token = Illegal
            | Return
            -- punctuations
            | Comma
+           | Colon
            | SemiColon
            | LParen
            | RParen

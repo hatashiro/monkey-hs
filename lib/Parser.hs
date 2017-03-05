@@ -72,6 +72,7 @@ parseAtomExpr = choose [ parseLitExpr
                        , parsePrefixExpr
                        , parseParenExpr
                        , parseArrayExpr
+                       , parseHashExpr
                        , parseIfExpr
                        , parseFnExpr
                        ]
@@ -97,6 +98,23 @@ parseArrayExpr = do
       atom Tk.Comma
       parseExpr
     return $ e : es
+
+parseHashExpr :: Parser Expr
+parseHashExpr = do
+  atom Tk.LBrace
+  pairs <- (parseHashPair >>= \pair -> do
+               morePairs <- many $ atom Tk.Comma >> parseHashPair
+               return $ pair : morePairs
+           ) <|> return []
+  atom Tk.RBrace
+  return $ HashExpr pairs
+  where
+  parseHashPair :: Parser (Literal, Expr)
+  parseHashPair = do
+    l <- parseLiteral
+    atom Tk.Colon
+    e <- parseExpr
+    return $ (l, e)
 
 parseLiteral :: Parser Literal
 parseLiteral = next >>= go

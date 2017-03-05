@@ -162,3 +162,12 @@ spec = do
 
     it "array tokens" $ do
       lex "[1, 2];" `shouldBe` Right [ LBracket, IntLiteral 1, Comma, IntLiteral 2, RBracket, SemiColon, EOF ]
+
+    it "hash tokens" $ do
+      lex "{\"hello\": \"world\"}" `shouldBe` Right [ LBrace
+                                                    , StringLiteral "hello"
+                                                    , Colon
+                                                    , StringLiteral "world"
+                                                    , RBrace
+                                                    , EOF
+                                                    ]
