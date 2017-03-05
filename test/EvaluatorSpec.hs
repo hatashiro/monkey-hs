@@ -102,6 +102,22 @@ let reduce = fn(f, init, arr) {
 };
 |]
 
+hash1 :: Text
+hash1 = [r|
+let double = fn(x) {
+  x * 2;
+};
+let arr = [1, 2, 3, 4];
+let h = {
+  "one": 10 - 9,
+  "two": 8 / 4,
+  3: arr[2],
+  4: double(2),
+  true: if (10 > 8) { true } else { false },
+  false: "hello" == "world"
+};
+|]
+
 spec :: Spec
 spec = do
   describe "evaluator" $ do
@@ -264,3 +280,14 @@ spec = do
         OArray [OInt 2, OInt 4, OInt 6, OInt 8]
       eval' (reduceDecl <> "let add = fn(x, y) { x + y }; reduce(add, 0, [1, 2, 3, 4, 5])") `shouldEvalTo`
         OInt 15
+
+    it "hash" $ do
+      eval' (hash1 <> "h[\"one\"]") `shouldEvalTo` OInt 1
+      eval' (hash1 <> "let s = \"two\"; h[s]") `shouldEvalTo` OInt 2
+      eval' (hash1 <> "h[3]") `shouldEvalTo` OInt 3
+      eval' (hash1 <> "h[2 + 2]") `shouldEvalTo` OInt 4
+      eval' (hash1 <> "h[true]") `shouldEvalTo` true
+      eval' (hash1 <> "h[5 < 1]") `shouldEvalTo` false
+      eval' (hash1 <> "h[100]") `shouldEvalTo` nil
+      eval' (hash1 <> "h[[]]") `shouldFail` EvalError "[] is not hashable"
+      eval' "3[true];" `shouldFail` EvalError "unexpected index target: 3"

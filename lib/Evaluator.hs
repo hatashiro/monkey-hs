@@ -44,6 +44,7 @@ evalExpr (IfExpr cond conse maybeAlter) = evalIf cond conse maybeAlter
 evalExpr (FnExpr params body) = evalFn params body
 evalExpr (CallExpr fn args) = evalCall fn args
 evalExpr (ArrayExpr es) = evalArray es
+evalExpr (HashExpr hs) = evalHash hs
 evalExpr (IndexExpr a i) = evalIndex a i
 
 evalIdent :: Ident -> Evaluator Object
@@ -130,11 +131,28 @@ evalCall fnExpr argExprs = do
 evalArray :: [Expr] -> Evaluator Object
 evalArray = fmap OArray . traverse evalExpr
 
+evalHash :: [(Literal, Expr)] -> Evaluator Object
+evalHash hs = do
+  ps <- traverse evalPair hs
+  return . OHash $ M.fromList ps
+  where
+  evalPair :: (Literal, Expr) -> Evaluator (Hashable, Object)
+  evalPair (l, e) = do
+    h <- l2h l
+    o <- evalExpr e
+    return (h, o)
+
 evalIndex :: Expr -> Expr -> Evaluator Object
-evalIndex arrE idxE = do
-  arr <- evalExpr arrE >>= o2a
-  idx <- evalExpr idxE >>= o2n
-  return $ fromMaybe nil (arr `at` idx)
+evalIndex targetE idxE = do
+  target <- evalExpr targetE
+  case target of
+    OArray arr -> do
+      idx <- evalExpr idxE >>= o2n
+      return $ fromMaybe nil (arr `at` idx)
+    OHash hash -> do
+      h <- evalExpr idxE >>= o2h
+      return $ M.findWithDefault nil h hash
+    o -> evalError $ "unexpected index target: " <> show o
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
@@ -149,9 +167,14 @@ o2f o@(OFn _ _ _) = return o
 o2f o@(OBuiltInFn _ _ _) = return o
 o2f o = evalError $ show o <> " is not a function"
 
-o2a :: Object -> Evaluator [Object]
-o2a (OArray os) = return os
-o2a o = evalError $ show o <> "is not an array"
+o2h :: Object -> Evaluator Hashable
+o2h (OInt i) = return $ IntHash i
+o2h (OBool b) = return $ BoolHash b
+o2h (OString t) = return $ StringHash t
+o2h o = evalError $ show o <> " is not hashable"
+
+l2h :: Literal -> Evaluator Hashable
+l2h = evalLiteral >=> o2h
 
 ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
 ee2x f = (liftM2 f `on`) . (evalExpr >=>)

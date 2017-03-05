@@ -11,6 +11,7 @@ data Object = OInt Integer
             | OBool Bool
             | OString Text
             | OArray [Object]
+            | OHash (M.Map Hashable Object)
             | ONull
             | OFn { params :: [Ident]
                   , body :: BlockStmt
@@ -27,6 +28,10 @@ instance Show Object where
   show (OBool x) = if x then "true" else "false"
   show (OString x) = show x
   show (OArray x) = show x
+  show (OHash m) = "{" ++ go (M.toList m) ++ "}"
+    where
+    go [(l, o)] = show l ++ ":" ++ show o
+    go (x:xs) = go [x] ++ "," ++ go xs
   show ONull = "null"
   show (OFn _ _ _) = "[function]"
   show (OBuiltInFn n _ _) = "[built-in function: " ++ toS n ++ "]"
@@ -37,12 +42,23 @@ instance Eq Object where
   OBool x == OBool y = x == y
   OString x == OString y = x == y
   OArray x == OArray y = x == y
+  OHash x == OHash y = x == y
   ONull == ONull = True
   OFn p b e == OFn p' b' e' = p == p' && b == b' && e == e'
   OReturn o == o' = o == o'
   o == OReturn o' = o == o'
   OBuiltInFn n p _ == OBuiltInFn n' p' _ = n == n' && p == p'
   _ == _ = False
+
+data Hashable = IntHash Integer
+              | BoolHash Bool
+              | StringHash Text
+              deriving (Eq, Ord)
+
+instance Show Hashable where
+  show (IntHash i) = show $ OInt i
+  show (BoolHash b) = show $ OBool b
+  show (StringHash t) = show $ OString t
 
 type BuiltInFnResult = Either Text Object
 type BuiltInFn = [Object] -> IO BuiltInFnResult

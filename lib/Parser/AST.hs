@@ -38,7 +38,7 @@ data Expr = IdentExpr Ident
 data Literal = IntLiteral Integer
              | BoolLiteral Bool
              | StringLiteral Text
-             deriving (Show, Eq, Ord)
+             deriving (Show, Eq)
 
 newtype Ident = Ident Text
               deriving (Eq, Ord)
