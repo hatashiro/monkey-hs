@@ -17,9 +17,8 @@ data Object = OInt Integer
                   }
             | OBuiltInFn { name :: Text
                          , numParams :: Int
-                         , fn :: [Object] -> IO Object
+                         , fn :: BuiltInFn
                          }
-            | OBuiltInError Text -- only for built-in functions
             | OReturn Object
 
 instance Show Object where
@@ -41,6 +40,9 @@ instance Eq Object where
   o == OReturn o' = o == o'
   OBuiltInFn n p _ == OBuiltInFn n' p' _ = n == n' && p == p'
   _ == _ = False
+
+type BuiltInFnResult = Either Text Object
+type BuiltInFn = [Object] -> IO BuiltInFnResult
 
 true :: Object
 true = OBool True

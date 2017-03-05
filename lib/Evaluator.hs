@@ -111,7 +111,7 @@ evalCall fnExpr argExprs = do
       setEnvRef origRef
       return o
 
-  evalBuiltInFnCall :: Int -> ([Object] -> IO Object) -> Evaluator Object
+  evalBuiltInFnCall :: Int -> BuiltInFn -> Evaluator Object
   evalBuiltInFnCall numParams fn = do
     if numParams /= length argExprs
     then evalError $ "wrong number of arguments: "
@@ -119,10 +119,10 @@ evalCall fnExpr argExprs = do
                     <> show (length argExprs) <> " given"
     else do
       args <- traverse evalExpr argExprs
-      o <- lift $ fn args
-      case o of
-        OBuiltInError t -> evalError t
-        _ -> return o
+      res <- lift $ fn args
+      case res of
+        Left t -> evalError t
+        Right o -> return o
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
