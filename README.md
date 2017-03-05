@@ -36,6 +36,13 @@ $ mkrepl
 $ stack exec mkrepl # without install
 ```
 
+### Interpreter
+
+``` bash
+$ mki examples/map-reduce.mk
+$ stack exec mki examples/hash.mk # without install
+```
+
 ## License
 
 [BSD3](LICENSE)
