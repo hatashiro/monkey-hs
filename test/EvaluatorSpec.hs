@@ -78,6 +78,30 @@ let addTwo = newAdder(2);
 addTwo(2);
 |]
 
+mapDecl :: Text
+mapDecl = [r|
+let map = fn(f, arr) {
+  if (len(arr) == 0) {
+    []
+  } else {
+    let h = head(arr);
+    cons(f(h), map(f, tail(arr)));
+  }
+};
+|]
+
+reduceDecl :: Text
+reduceDecl = [r|
+let reduce = fn(f, init, arr) {
+  if (len(arr) == 0) {
+    init
+  } else {
+    let newInit = f(init, head(arr));
+    reduce(f, newInit, tail(arr));
+  }
+};
+|]
+
 spec :: Spec
 spec = do
   describe "evaluator" $ do
@@ -234,3 +258,9 @@ spec = do
       -- cons
       eval' "cons(1, [])" `shouldEvalTo` OArray [OInt 1]
       eval' "cons(1, [2, 3, 4])" `shouldEvalTo` OArray [OInt 1, OInt 2, OInt 3, OInt 4]
+
+    it "map & reduce" $ do
+      eval' (mapDecl <> "let double = fn(x) { x * 2 }; map(double, [1, 2, 3, 4])") `shouldEvalTo`
+        OArray [OInt 2, OInt 4, OInt 6, OInt 8]
+      eval' (reduceDecl <> "let add = fn(x, y) { x + y }; reduce(add, 0, [1, 2, 3, 4, 5])") `shouldEvalTo`
+        OInt 15
