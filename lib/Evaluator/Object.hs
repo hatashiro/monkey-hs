@@ -15,8 +15,12 @@ data Object = OInt Integer
                   , body :: BlockStmt
                   , env :: EnvRef
                   }
+            | OBuiltInFn { name :: Text
+                         , numParams :: Int
+                         , fn :: [Object] -> IO Object
+                         }
+            | OBuiltInError Text -- only for built-in functions
             | OReturn Object
-            deriving (Eq)
 
 instance Show Object where
   show (OInt x) = show x
@@ -24,7 +28,19 @@ instance Show Object where
   show (OString x) = show x
   show ONull = "null"
   show (OFn _ _ _) = "[function]"
+  show (OBuiltInFn n _ _) = "[built-in function: " ++ toS n ++ "]"
   show (OReturn o) = show o
+
+instance Eq Object where
+  OInt x == OInt y = x == y
+  OBool x == OBool y = x == y
+  OString x == OString y = x == y
+  ONull == ONull = True
+  OFn p b e == OFn p' b' e' = p == p' && b == b' && e == e'
+  OReturn o == o' = o == o'
+  o == OReturn o' = o == o'
+  OBuiltInFn n p _ == OBuiltInFn n' p' _ = n == n' && p == p'
+  _ == _ = False
 
 true :: Object
 true = OBool True

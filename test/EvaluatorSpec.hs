@@ -194,3 +194,10 @@ spec = do
       eval' [r|"foo" + "bar"|] `shouldEvalTo` OString "foobar"
       eval' [r|"foo" + " " + "bar"|] `shouldEvalTo` OString "foo bar"
       eval' [r|"foo" - "bar"|] `shouldFail` EvalError "\"foo\" is not a number"
+
+    it "built-in functions" $ do
+      eval' "len(\"hello world!\")" `shouldEvalTo` OInt 12
+      eval' "len(\"\")" `shouldEvalTo` OInt 0
+      eval' "len(\"Hey Bob, how ya doin?\")" `shouldEvalTo` OInt 21
+      eval' "len(3)" `shouldFail` EvalError "invalid arguments for [built-in function: len]: [3]"
+      eval' "len(\"hello\", \"world\")" `shouldFail` EvalError "wrong number of arguments: 1 expected but 2 given"

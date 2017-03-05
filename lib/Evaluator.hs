@@ -92,18 +92,37 @@ evalFn params body = do
 
 evalCall :: Expr -> [Expr] -> Evaluator Object
 evalCall fnExpr argExprs = do
-  OFn params body fRef <- evalExpr fnExpr >>= o2f
-  args <- traverse evalExpr argExprs
-  if length params /= length args
-  then evalError $ "wrong number of arguments: "
-                   <> show (length params) <> " expected but "
-                   <> show (length args) <> " given"
-  else do
-    origRef <- getEnvRef
-    lift (wrapEnv fRef $ zip params args) >>= setEnvRef
-    o <- returned <$> evalBlockStmt body
-    setEnvRef origRef
-    return o
+  fn <- evalExpr fnExpr >>= o2f
+  case fn of
+    OFn params body fRef -> evalFnCall params body fRef
+    OBuiltInFn _ numParams fn -> evalBuiltInFnCall numParams fn
+  where
+  evalFnCall :: [Ident] -> BlockStmt -> EnvRef -> Evaluator Object
+  evalFnCall params body fRef = do
+    if length params /= length argExprs
+    then evalError $ "wrong number of arguments: "
+                    <> show (length params) <> " expected but "
+                    <> show (length argExprs) <> " given"
+    else do
+      args <- traverse evalExpr argExprs
+      origRef <- getEnvRef
+      lift (wrapEnv fRef $ zip params args) >>= setEnvRef
+      o <- returned <$> evalBlockStmt body
+      setEnvRef origRef
+      return o
+
+  evalBuiltInFnCall :: Int -> ([Object] -> IO Object) -> Evaluator Object
+  evalBuiltInFnCall numParams fn = do
+    if numParams /= length argExprs
+    then evalError $ "wrong number of arguments: "
+                    <> show (numParams) <> " expected but "
+                    <> show (length argExprs) <> " given"
+    else do
+      args <- traverse evalExpr argExprs
+      o <- lift $ fn args
+      case o of
+        OBuiltInError t -> evalError t
+        _ -> return o
 
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
@@ -115,6 +134,7 @@ o2n o = evalError $ show o <> " is not a number"
 
 o2f :: Object -> Evaluator Object
 o2f o@(OFn _ _ _) = return o
+o2f o@(OBuiltInFn _ _ _) = return o
 o2f o = evalError $ show o <> " is not a function"
 
 ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b

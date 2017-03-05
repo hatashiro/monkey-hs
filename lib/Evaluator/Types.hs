@@ -4,6 +4,7 @@ module Evaluator.Types where
 
 import Protolude
 
+import Evaluator.BuiltIns (builtIns)
 import Evaluator.Object
 import Parser.AST (Ident)
 
@@ -25,7 +26,7 @@ setEnvRef :: Monad m => EnvRef -> EvaluatorT m ()
 setEnvRef ref = put $ EvalState ref
 
 createEmptyState :: IO EvalState
-createEmptyState = EvalState <$> emptyEnv
+createEmptyState = EvalState <$> (emptyEnv >>= flip wrapEnv builtIns)
 
 newtype EvaluatorT m a = EvaluatorT
   { runEvaluatorT :: StateT EvalState (ExceptT EvalError m) a }

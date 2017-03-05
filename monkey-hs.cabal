@@ -15,6 +15,7 @@ library
   exposed-modules:     Common.ParserT
                        Common.Stream
                        Evaluator
+                       Evaluator.BuiltIns
                        Evaluator.Object
                        Evaluator.Types
                        Lexer
