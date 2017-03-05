@@ -7,6 +7,7 @@ import qualified Data.Map.Strict as M
 import           Evaluator.Object
 import           Evaluator.Types
 import           Parser.AST
+import           Utils (at)
 
 evalProgram :: Program -> Evaluator Object
 evalProgram (Program blockStmt) = returned <$> evalBlockStmt blockStmt
@@ -42,6 +43,8 @@ evalExpr (InfixExpr i l r) = evalInfix i l r
 evalExpr (IfExpr cond conse maybeAlter) = evalIf cond conse maybeAlter
 evalExpr (FnExpr params body) = evalFn params body
 evalExpr (CallExpr fn args) = evalCall fn args
+evalExpr (ArrayExpr es) = evalArray es
+evalExpr (IndexExpr a i) = evalIndex a i
 
 evalIdent :: Ident -> Evaluator Object
 evalIdent i = do
@@ -124,6 +127,15 @@ evalCall fnExpr argExprs = do
         Left t -> evalError t
         Right o -> return o
 
+evalArray :: [Expr] -> Evaluator Object
+evalArray = fmap OArray . traverse evalExpr
+
+evalIndex :: Expr -> Expr -> Evaluator Object
+evalIndex arrE idxE = do
+  arr <- evalExpr arrE >>= o2a
+  idx <- evalExpr idxE >>= o2n
+  return $ fromMaybe nil (arr `at` idx)
+
 o2b :: Object -> Evaluator Bool
 o2b (OBool b) = return b
 o2b o = evalError $ show o <> " is not a bool"
@@ -136,6 +148,10 @@ o2f :: Object -> Evaluator Object
 o2f o@(OFn _ _ _) = return o
 o2f o@(OBuiltInFn _ _ _) = return o
 o2f o = evalError $ show o <> " is not a function"
+
+o2a :: Object -> Evaluator [Object]
+o2a (OArray os) = return os
+o2a o = evalError $ show o <> "is not an array"
 
 ee2x :: (a -> a -> b) -> (Object -> Evaluator a) -> Expr -> Expr -> Evaluator b
 ee2x f = (liftM2 f `on`) . (evalExpr >=>)

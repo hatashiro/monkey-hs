@@ -10,6 +10,7 @@ import           Parser.AST
 data Object = OInt Integer
             | OBool Bool
             | OString Text
+            | OArray [Object]
             | ONull
             | OFn { params :: [Ident]
                   , body :: BlockStmt
@@ -25,6 +26,7 @@ instance Show Object where
   show (OInt x) = show x
   show (OBool x) = if x then "true" else "false"
   show (OString x) = show x
+  show (OArray x) = show x
   show ONull = "null"
   show (OFn _ _ _) = "[function]"
   show (OBuiltInFn n _ _) = "[built-in function: " ++ toS n ++ "]"
@@ -34,6 +36,7 @@ instance Eq Object where
   OInt x == OInt y = x == y
   OBool x == OBool y = x == y
   OString x == OString y = x == y
+  OArray x == OArray y = x == y
   ONull == ONull = True
   OFn p b e == OFn p' b' e' = p == p' && b == b' && e == e'
   OReturn o == o' = o == o'

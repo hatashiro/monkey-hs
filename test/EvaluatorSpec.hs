@@ -201,3 +201,22 @@ spec = do
       eval' "len(\"Hey Bob, how ya doin?\")" `shouldEvalTo` OInt 21
       eval' "len(3)" `shouldFail` EvalError "invalid arguments for [built-in function: len]: [3]"
       eval' "len(\"hello\", \"world\")" `shouldFail` EvalError "wrong number of arguments: 1 expected but 2 given"
+
+    it "array" $ do
+      eval' "[1, 2, 3, 4]" `shouldEvalTo` OArray [ OInt 1
+                                                 , OInt 2
+                                                 , OInt 3
+                                                 , OInt 4
+                                                 ]
+      eval' "let double = fn(x) { x * 2};[1, double(2), 3 * 3, 4 - 3]" `shouldEvalTo`
+        OArray [ OInt 1, OInt 4, OInt 9, OInt 1]
+      eval' "[1, 2, 3][0]" `shouldEvalTo` OInt 1
+      eval' "[1, 2, 3][1]" `shouldEvalTo` OInt 2
+      eval' "[1, 2, 3][2]" `shouldEvalTo` OInt 3
+      eval' "let i = 0; [1][i];" `shouldEvalTo` OInt 1
+      eval' "[1, 2, 3][1 + 1];" `shouldEvalTo` OInt 3
+      eval' "let myArray = [1, 2, 3]; myArray[2];" `shouldEvalTo` OInt 3
+      eval' "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];" `shouldEvalTo` OInt 6
+      eval' "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];" `shouldEvalTo` OInt 2
+      eval' "[1, 2, 3][3]" `shouldEvalTo` nil
+      eval' "[1, 2, 3][-1]" `shouldEvalTo` nil
