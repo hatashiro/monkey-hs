@@ -54,6 +54,7 @@ evalIdent i = do
 evalLiteral :: Literal -> Evaluator Object
 evalLiteral (IntLiteral i) = return $ OInt i
 evalLiteral (BoolLiteral b) = return $ OBool b
+evalLiteral (StringLiteral s) = return $ OString s
 
 evalPrefix :: Prefix -> Expr -> Evaluator Object
 evalPrefix Not = fmap (OBool . not) . (evalExpr >=> o2b)
@@ -61,7 +62,7 @@ evalPrefix PrefixPlus = fmap OInt . (evalExpr >=> o2n)
 evalPrefix PrefixMinus = fmap (OInt . negate) . (evalExpr >=> o2n)
 
 evalInfix :: Infix -> Expr -> Expr -> Evaluator Object
-evalInfix Plus = (fmap OInt .) . ee2x (+) o2n
+evalInfix Plus = (join .) .  ee2x (oAdd) return
 evalInfix Minus = (fmap OInt .) . ee2x (-) o2n
 evalInfix Multiply = (fmap OInt .) . ee2x (*) o2n
 evalInfix Divide = (fmap OInt .) . ee2x div o2n
@@ -69,6 +70,11 @@ evalInfix Eq = (fmap OBool .) . ee2x (==) return
 evalInfix NotEq = (fmap OBool  .) . ee2x (/=) return
 evalInfix GreaterThan = (fmap OBool .) . ee2x (>) o2n
 evalInfix LessThan = (fmap OBool .) . ee2x (<) o2n
+
+oAdd :: Object -> Object -> Evaluator Object
+oAdd (OInt x) (OInt y) = return . OInt $ x + y
+oAdd (OString x) (OString y) = return . OString $ x <> y
+oAdd x y = evalError $ show x <> " and " <> show y <> " are not addable"
 
 evalIf :: Expr -> BlockStmt -> Maybe BlockStmt -> Evaluator Object
 evalIf cond conse maybeAlter = do

@@ -86,6 +86,7 @@ parseLiteral = next >>= go
   where
   go (Tk.IntLiteral i) = return $ IntLiteral i
   go (Tk.BoolLiteral b) = return $ BoolLiteral b
+  go (Tk.StringLiteral s) = return $ StringLiteral s
   go _ = fail "fail to parse a literal"
 
 parseExpr :: Parser Expr

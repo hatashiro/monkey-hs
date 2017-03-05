@@ -13,6 +13,7 @@ lexToken :: Lexer Token
 lexToken = choose
   [ lexOperator
   , lexPunctuation
+  , lexString
   , lexReservedOrIdent
   , lexInteger
   , lexIllegal
@@ -44,6 +45,25 @@ lexPunctuation = choose
   , parseMap "{" LBrace
   , parseMap "}" RBrace
   ]
+
+lexString :: Lexer Token
+lexString = do
+  atom '"'
+  x <- go -- will lex the closing double quotation mark too
+  return $ StringLiteral x
+  where
+  go :: Lexer Text
+  go = do
+    c <- next
+    case c of
+      '"' -> return ""
+      '\\' -> do
+        c <- next
+        T.cons (case c of
+          'n' -> '\n'
+          't' -> '\t'
+          c -> c) <$> go
+      c -> T.cons c <$> go
 
 letter :: Lexer Char
 letter = predicate isLetter

@@ -154,8 +154,8 @@ spec = do
                                                 ]
 
     it "string literals" $ do
-      lex [r|"foobar"|] `shouldBe` Right [ StringLiteral "foobar" ]
-      lex [r|"foo bar"|] `shouldBe` Right [ StringLiteral "foo bar" ]
-      lex [r|"foo\nbar"|] `shouldBe` Right [ StringLiteral "foo\nbar" ]
-      lex [r|"foo\tbar"|] `shouldBe` Right [ StringLiteral "foo\tbar" ]
-      lex [r|"foo\"bar"|] `shouldBe` Right [ StringLiteral "foo\"bar" ]
+      lex [r|"foobar"|] `shouldBe` Right [ StringLiteral "foobar", EOF ]
+      lex [r|"foo bar"|] `shouldBe` Right [ StringLiteral "foo bar", EOF ]
+      lex [r|"foo\nbar"|] `shouldBe` Right [ StringLiteral "foo\nbar", EOF ]
+      lex [r|"foo\tbar"|] `shouldBe` Right [ StringLiteral "foo\tbar", EOF ]
+      lex [r|"foo\"bar"|] `shouldBe` Right [ StringLiteral "foo\"bar", EOF ]
