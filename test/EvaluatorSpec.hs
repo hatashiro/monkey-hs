@@ -195,13 +195,6 @@ spec = do
       eval' [r|"foo" + " " + "bar"|] `shouldEvalTo` OString "foo bar"
       eval' [r|"foo" - "bar"|] `shouldFail` EvalError "\"foo\" is not a number"
 
-    it "built-in functions" $ do
-      eval' "len(\"hello world!\")" `shouldEvalTo` OInt 12
-      eval' "len(\"\")" `shouldEvalTo` OInt 0
-      eval' "len(\"Hey Bob, how ya doin?\")" `shouldEvalTo` OInt 21
-      eval' "len(3)" `shouldFail` EvalError "invalid arguments for [built-in function: len]: [3]"
-      eval' "len(\"hello\", \"world\")" `shouldFail` EvalError "wrong number of arguments: 1 expected but 2 given"
-
     it "array" $ do
       eval' "[1, 2, 3, 4]" `shouldEvalTo` OArray [ OInt 1
                                                  , OInt 2
@@ -220,3 +213,24 @@ spec = do
       eval' "let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i];" `shouldEvalTo` OInt 2
       eval' "[1, 2, 3][3]" `shouldEvalTo` nil
       eval' "[1, 2, 3][-1]" `shouldEvalTo` nil
+
+    it "built-in functions" $ do
+      -- len
+      eval' "len(\"hello world!\")" `shouldEvalTo` OInt 12
+      eval' "len(\"\")" `shouldEvalTo` OInt 0
+      eval' "len(\"Hey Bob, how ya doin?\")" `shouldEvalTo` OInt 21
+      eval' "len(3)" `shouldFail` EvalError "invalid arguments for [built-in function: len]: [3]"
+      eval' "len(\"hello\", \"world\")" `shouldFail` EvalError "wrong number of arguments: 1 expected but 2 given"
+      eval' "len([])" `shouldEvalTo` OInt 0
+      eval' "len([1, 2, 3, 4])" `shouldEvalTo` OInt 4
+      -- head
+      eval' "head([1])" `shouldEvalTo` OInt 1
+      eval' "head([1, 2, 3, 4])" `shouldEvalTo` OInt 1
+      eval' "head([])" `shouldFail` EvalError "invalid arguments for [built-in function: head]: empty array"
+      -- tail
+      eval' "tail([1])" `shouldEvalTo` OArray []
+      eval' "tail([1, 2, 3, 4])" `shouldEvalTo` OArray [OInt 2, OInt 3, OInt 4]
+      eval' "tail([])" `shouldFail` EvalError "invalid arguments for [built-in function: tail]: empty array"
+      -- cons
+      eval' "cons(1, [])" `shouldEvalTo` OArray [OInt 1]
+      eval' "cons(1, [2, 3, 4])" `shouldEvalTo` OArray [OInt 1, OInt 2, OInt 3, OInt 4]
