@@ -44,6 +44,8 @@ lexPunctuation = choose
   , parseMap ")" RParen
   , parseMap "{" LBrace
   , parseMap "}" RBrace
+  , parseMap "[" LBracket
+  , parseMap "]" RBracket
   ]
 
 lexString :: Lexer Token

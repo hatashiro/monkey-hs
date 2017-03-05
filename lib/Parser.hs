@@ -63,6 +63,7 @@ infixOp Tk.Minus = (PSum, Just Minus)
 infixOp Tk.Multiply = (PProduct, Just Multiply)
 infixOp Tk.Divide = (PProduct, Just Divide)
 infixOp Tk.LParen = (PCall, Nothing) -- for call expr
+infixOp Tk.LBracket = (PIndex, Nothing) -- for index expr
 infixOp _ = (PLowest, Nothing)
 
 parseAtomExpr :: Parser Expr
@@ -70,6 +71,7 @@ parseAtomExpr = choose [ parseLitExpr
                        , parseIdentExpr
                        , parsePrefixExpr
                        , parseParenExpr
+                       , parseArrayExpr
                        , parseIfExpr
                        , parseFnExpr
                        ]
@@ -80,6 +82,21 @@ parseParenExpr = do
   expr <- parseExpr
   atom Tk.RParen
   return expr
+
+parseArrayExpr :: Parser Expr
+parseArrayExpr = do
+  atom Tk.LBracket
+  exprs <- parseExprs <|> return []
+  atom Tk.RBracket
+  return $ ArrayExpr exprs
+  where
+  parseExprs :: Parser [Expr]
+  parseExprs = do
+    e <- parseExpr
+    es <- many $ do
+      atom Tk.Comma
+      parseExpr
+    return $ e : es
 
 parseLiteral :: Parser Literal
 parseLiteral = next >>= go
@@ -103,6 +120,9 @@ parsePrattExpr precedence = do
     case maybePeekInfixOp of
       Just (PCall, _) | precedence < PCall -> do
         left' <- parseCallExpr left
+        go precedence left'
+      Just (PIndex, _) | precedence < PIndex -> do
+        left' <- parseIndexExpr left
         go precedence left'
       Just (peekPrecedence, _) | precedence < peekPrecedence -> do
         left' <- parseInfixExpr left
@@ -136,6 +156,13 @@ parseCallExpr fnHandle = do
           ) <|> return []
   atom Tk.RParen
   return $ CallExpr fnHandle args
+
+parseIndexExpr :: Expr -> Parser Expr
+parseIndexExpr arr = do
+  atom Tk.LBracket
+  idx <- parseExpr
+  atom Tk.RBracket
+  return $ IndexExpr arr idx
 
 parseLitExpr :: Parser Expr
 parseLitExpr = LitExpr <$> parseLiteral

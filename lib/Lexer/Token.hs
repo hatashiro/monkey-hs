@@ -34,4 +34,6 @@ data Token = Illegal
            | RParen
            | LBrace
            | RBrace
+           | LBracket
+           | RBracket
            deriving (Show, Eq)

@@ -28,6 +28,10 @@ data Expr = IdentExpr Ident
           | CallExpr { function :: Expr
                      , arguments :: [Expr]
                      }
+          | ArrayExpr [Expr]
+          | IndexExpr { array :: Expr
+                      , index :: Expr
+                      }
           deriving (Show, Eq)
 
 data Literal = IntLiteral Integer
@@ -60,4 +64,5 @@ data Precedence = PLowest
                 | PSum
                 | PProduct
                 | PCall
+                | PIndex
                 deriving (Show, Eq, Ord)

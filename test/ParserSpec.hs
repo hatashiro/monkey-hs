@@ -229,3 +229,21 @@ spec = do
       synAna [r|"foo\nbar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo\nbar" ]
       synAna [r|"foo\tbar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo\tbar" ]
       synAna [r|"foo\"bar"|] `shouldBe` Program [ ExprStmt $ LitExpr $ StringLiteral "foo\"bar" ]
+
+    it "array" $ do
+      synAna "[1, 2 * 2, 3 + 3]" `shouldBe`
+        Program [ ExprStmt $
+                  ArrayExpr [ LitExpr $ IntLiteral 1
+                            , InfixExpr Multiply (LitExpr $ IntLiteral 2) (LitExpr $ IntLiteral 2)
+                            , InfixExpr Plus (LitExpr $ IntLiteral 3) (LitExpr $ IntLiteral 3)
+                            ]
+                ]
+      synAna "myArray[1 + 1]" `shouldBe`
+        Program [ ExprStmt $
+                  IndexExpr (IdentExpr (Ident "myArray"))
+                            (InfixExpr Plus (LitExpr $ IntLiteral 1) (LitExpr $ IntLiteral 1))
+                ]
+      -- precedences
+      let pTest x y = synAna x `shouldBe` synAna y
+      "a * [1, 2, 3, 4][b * c] * d" `pTest` "((a * ([1, 2, 3, 4][b * c])) * d)"
+      "add(a * b[2], b[1], 2 * [1, 2][1])" `pTest` "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"

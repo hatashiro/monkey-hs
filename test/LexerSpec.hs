@@ -159,3 +159,6 @@ spec = do
       lex [r|"foo\nbar"|] `shouldBe` Right [ StringLiteral "foo\nbar", EOF ]
       lex [r|"foo\tbar"|] `shouldBe` Right [ StringLiteral "foo\tbar", EOF ]
       lex [r|"foo\"bar"|] `shouldBe` Right [ StringLiteral "foo\"bar", EOF ]
+
+    it "array tokens" $ do
+      lex "[1, 2];" `shouldBe` Right [ LBracket, IntLiteral 1, Comma, IntLiteral 2, RBracket, SemiColon, EOF ]
