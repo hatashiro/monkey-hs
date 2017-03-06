@@ -14,7 +14,7 @@ import           System.Console.Haskeline
 import qualified GHC.Show as G
 
 loop :: (a -> IO a) -> a -> IO a
-loop io a = io a >>= loop io
+loop io = io >=> loop io
 
 read :: IO (Maybe Text)
 read = runInputT defaultSettings $ (fmap . fmap) toS $ getInputLine "> "
