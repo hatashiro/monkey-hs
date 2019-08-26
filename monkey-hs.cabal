@@ -4,8 +4,8 @@ synopsis:            An interpreter for the Monkey programming language written 
 homepage:            https://github.com/utatti/monkey-hs
 license:             BSD3
 license-file:        LICENSE
-author:              Hyunje Jun
-maintainer:          me@noraesae.net
+author:              Hyunjae Jun
+maintainer:          noraesae+dev@gmail.com
 category:            Language
 build-type:          Simple
 extra-source-files:  ChangeLog.md
